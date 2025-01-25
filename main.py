@@ -2,6 +2,7 @@ import requests
 import json
 import gspread
 import logging
+import time
 from logging.handlers import RotatingFileHandler
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -14,25 +15,7 @@ headers = {
 	"Authorization" : None
 }
 
-# Configure the RotatingFileHandler
-log_handler = RotatingFileHandler(
-    "logfile.log",  # Log file name
-    maxBytes=1_000_000,  # Maximum file size in bytes (1 MB in this example)
-    backupCount=0  # No backup files; overwrite the same file
-)
-
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level
-    format="%(asctime)s - %(levelname)s - %(message)s",  # Log message format
-    handlers=[log_handler]  # Add the rotating handler
-)
-
-with open("whatsappKey.txt", 'r') as f:
-	headers['Authorization'] = "Bearer " + f.read()
-
-logging.info(f"Succesfully read WhatsappKey.txt -> {headers['Authorization']}")
-
-dataJson = {
+template = {
   "messaging_product": "whatsapp",
   "recipient_type": "individual",
   "to": None,
@@ -56,10 +39,27 @@ dataJson = {
   }
 }
 
+# Configure the RotatingFileHandler
+log_handler = RotatingFileHandler(
+    "logfile.log",  # Log file name
+    maxBytes=1_000_000,  # Maximum file size in bytes (1 MB in this example)
+    backupCount=0  # No backup files; overwrite the same file
+)
+
+logging.basicConfig(
+    level=logging.INFO,  # Set the logging level
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Log message format
+    handlers=[log_handler]  # Add the rotating handler
+)
+
+with open("whatsappKey.txt", 'r') as f:
+	headers['Authorization'] = "Bearer " + f.read()
+
+logging.info(f"Succesfully read WhatsappKey.txt -> {headers['Authorization']}")
+
 creds = ServiceAccountCredentials.from_json_keyfile_name("key.json", scope)
 client = gspread.authorize(creds)
 logging.info(f"Succesfully read key.json")
-
 
 with open("remember.json", 'r') as f:
 	temp = json.loads(f.read())
@@ -69,32 +69,58 @@ with open("remember.json", 'r') as f:
 sheet = client.open(sheetName).sheet1
 
 # * Modify the last line  for the next run of the program
-def updateLastLine():
+def updateLastLine(nameCol):
 	f = open("remember.json", 'r')
 	t = json.loads(f.read())
 	f.close()
-	t['lastLine'] = t["lastLine"] + len(nameCol) - 1 # ! This point to last contact card
+	t['lastLine'] = t["lastLine"] + len(nameCol)  # ! This points to last contact card + 1
 	f = open('remember.json', 'w')
 	f.write(json.dumps(t))
 
-# * The lettering stays constant, the left number is imported from file
-lastNumber = None
-with open("remember.json") as f:
-	d = json.loads(f.read())
-	lastNumber = d['lastLine']
+def listener(): # * Check how many people are not message sent
+	lastNumber = None
+	with open("remember.json", 'r') as f:
+		d = json.loads(f.read())
+		lastNumber = d['lastLine']
+	
+	nameCol = sheet.get(f'C{lastNumber}:C')
+	print(f'C{lastNumber}:C')
+	print(nameCol[0], type(nameCol))
+	print(len(nameCol))
 
-nameCol = sheet.get(f'C{lastNumber}:C')
-phNrCol = sheet.get(f'D{lastNumber}:D')
 
-# TODO: Implement code logging.
-for i in range(len(nameCol)): # Go through every user and send them a custom message
-	dataJson['to'] = '40' + phNrCol[i][0]
-	dataJson['template']['components'][0]['parameters'][0]['text'] = nameCol[i][0]
-	print(f"{dataJson['to']} -> {dataJson['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
-	response = requests.request("POST", url, data=json.dumps(dataJson), headers=headers)
-	if(response.status_code == 200):
-		logging.info(f"[{response.status_code}] Sent {nameCol[i][0]} : 40{phNrCol[i][0]} template message named - {dataJson['template']['name']}")
-	else:
-		logging.error(f"[{response.status_code}] {response.text}")
-	# print(response.text)
-	print(response.status_code)
+def main():
+	# * The lettering stays constant, the left number is imported from file
+	lastNumber = None
+	with open("remember.json", 'r') as f:
+		d = json.loads(f.read())
+		lastNumber = d['lastLine']
+
+	nameCol = sheet.get(f'C{lastNumber}:C')
+	phNrCol = sheet.get(f'D{lastNumber}:D')
+
+	for i in range(len(nameCol)): # Go through every user and send them a custom message
+		template['to'] = '40' + phNrCol[i][0]
+		template['template']['components'][0]['parameters'][0]['text'] = nameCol[i][0]
+		print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
+		response = requests.request("POST", url, data=json.dumps(template), headers=headers)
+		if(response.status_code == 200):
+			logging.info(f"[{response.status_code}] Sent {nameCol[i][0]} : 40{phNrCol[i][0]} template message named - {template['template']['name']}")
+		else:
+			logging.error(f"[{response.status_code}] {response.text}")
+		# print(response.text)
+		print(response.status_code)
+
+	updateLastLine(nameCol)
+	logging.info("------- SESION END -------")
+
+
+if __name__ == '__main__':
+	# main()
+	# listener()
+	while True:
+		listener()
+		time.sleep(10)
+
+
+# TODO: After 10 sessions send the log through whatsapp to me

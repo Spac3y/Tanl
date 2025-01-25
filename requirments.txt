@@ -1,0 +1,4 @@
+logging
+gspread
+requests
+oauth2client
