@@ -16,9 +16,9 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-url = "https://graph.facebook.com/v21.0/469064916301145/messages"
+url = "Facebook api link goes here"
 
-webhookUrl = "https://discord.com/api/webhooks/1332767592292552724/CN1fnoDt-HpdMbKVdv7E0CDFmFQOxdPwR26EqvZS2d5vCiOPqiHVrOk7Gw1kdf8QwAuS"
+webhookUrl = "Webhook Link goes here"
 discordHeaders = {
 	"Content-Type": "application/json",
 	"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11"
