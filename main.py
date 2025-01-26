@@ -1,3 +1,9 @@
+# The limit on google sheets api reads in 500.000/day
+# 86.400 seconds in a day
+# -> 0.2 requests per seconds
+# Will multiply it by 10 just to be safe
+# After 21600 check I get log =~ 12 hours
+
 import requests
 import json
 import gspread
@@ -5,10 +11,18 @@ import logging
 import time
 from logging.handlers import RotatingFileHandler
 from oauth2client.service_account import ServiceAccountCredentials
+from discord_webhook import DiscordWebhook, DiscordEmbed
+
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 url = "https://graph.facebook.com/v21.0/469064916301145/messages"
+
+webhookUrl = "https://discord.com/api/webhooks/1332767592292552724/CN1fnoDt-HpdMbKVdv7E0CDFmFQOxdPwR26EqvZS2d5vCiOPqiHVrOk7Gw1kdf8QwAuS"
+discordHeaders = {
+	"Content-Type": "application/json",
+	"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11"
+}
 
 headers = {
 	"Content-Type" : "application/json",
@@ -54,8 +68,7 @@ logging.basicConfig(
 
 with open("whatsappKey.txt", 'r') as f:
 	headers['Authorization'] = "Bearer " + f.read()
-
-logging.info(f"Succesfully read WhatsappKey.txt -> {headers['Authorization']}")
+	logging.info(f"Succesfully read WhatsappKey.txt -> {headers['Authorization']}")
 
 creds = ServiceAccountCredentials.from_json_keyfile_name("key.json", scope)
 client = gspread.authorize(creds)
@@ -77,20 +90,39 @@ def updateLastLine(nameCol):
 	f = open('remember.json', 'w')
 	f.write(json.dumps(t))
 
-def listener(): # * Check how many people are not message sent
+def sendDiscordLog():
+	#Create a Discord webhook object
+	webhook = DiscordWebhook(url=webhookUrl)
+
+	#Add the file or files to the embed
+	with open('logfile.log', 'rb') as f: 
+		file_data = f.read() 
+	webhook.add_file(file_data, 'logfile.log')
+
+	#Send the webhook
+	response = webhook.execute()
+	if(response.status_code == 200): logging.info("[200]Sent logfile.log to admin")
+	else: logging.error(f"[{response.status_code}]{response.text}")
+
+def listener():
 	lastNumber = None
 	with open("remember.json", 'r') as f:
 		d = json.loads(f.read())
 		lastNumber = d['lastLine']
 	
 	nameCol = sheet.get(f'C{lastNumber}:C')
-	print(f'C{lastNumber}:C')
-	print(nameCol[0], type(nameCol))
-	print(len(nameCol))
+	# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
+	print("Waiting...")
+	if(len(nameCol) >=1 and len(nameCol[0]) != 0):
+		print("nameCol : ", nameCol) 
+		# print("Length : ", len(nameCol))
+		# print('nameCol[0] : ', nameCol[0])
+		# print('Length nameCol[0] : ', len(nameCol[0]))
+		executor()
+		updateLastLine(nameCol)
+		# print("-----------------")
 
-
-def main():
-	# * The lettering stays constant, the left number is imported from file
+def executor():
 	lastNumber = None
 	with open("remember.json", 'r') as f:
 		d = json.loads(f.read())
@@ -99,28 +131,36 @@ def main():
 	nameCol = sheet.get(f'C{lastNumber}:C')
 	phNrCol = sheet.get(f'D{lastNumber}:D')
 
+	print(phNrCol)
+
 	for i in range(len(nameCol)): # Go through every user and send them a custom message
+		print("index : ", i)
 		template['to'] = '40' + phNrCol[i][0]
 		template['template']['components'][0]['parameters'][0]['text'] = nameCol[i][0]
-		print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
+		# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
 		response = requests.request("POST", url, data=json.dumps(template), headers=headers)
 		if(response.status_code == 200):
 			logging.info(f"[{response.status_code}] Sent {nameCol[i][0]} : 40{phNrCol[i][0]} template message named - {template['template']['name']}")
 		else:
 			logging.error(f"[{response.status_code}] {response.text}")
 		# print(response.text)
-		print(response.status_code)
+		# print(response.status_code)
 
-	updateLastLine(nameCol)
 	logging.info("------- SESION END -------")
+
+def main():
+	x = 0 
+	while True:
+		x += 1
+		listener()
+		time.sleep(2)
+		# TODO: After 21600 sessions send the log through discord to custom server
+		if x == 21600: 
+		# if x == 10: # For testing
+			x = 0
+			sendDiscordLog()
+		# print(x)
 
 
 if __name__ == '__main__':
-	# main()
-	# listener()
-	while True:
-		listener()
-		time.sleep(10)
-
-
-# TODO: After 10 sessions send the log through whatsapp to me
+	main()
