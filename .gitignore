@@ -2,3 +2,4 @@ key.json
 whatsappKey.txt
 .vscode
 *.log
+.DS_Store

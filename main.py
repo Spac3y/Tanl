@@ -11,14 +11,15 @@ import logging
 import time
 from logging.handlers import RotatingFileHandler
 from oauth2client.service_account import ServiceAccountCredentials
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from discord_webhook import DiscordWebhook
 
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-url = "Facebook api link goes here"
+url = "https://graph.facebook.com/v21.0/469064916301145/messages"
 
-webhookUrl = "Webhook Link goes here"
+webhookUrl = "https://discord.com/api/webhooks/1332767592292552724/CN1fnoDt-HpdMbKVdv7E0CDFmFQOxdPwR26EqvZS2d5vCiOPqiHVrOk7Gw1kdf8QwAuS"
+
 discordHeaders = {
 	"Content-Type": "application/json",
 	"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11"
@@ -87,6 +88,7 @@ def updateLastLine(nameCol):
 	t = json.loads(f.read())
 	f.close()
 	t['lastLine'] = t["lastLine"] + len(nameCol)  # ! This points to last contact card + 1
+	logging.info(f"New line is {t['lastLine']}")
 	f = open('remember.json', 'w')
 	f.write(json.dumps(t))
 
@@ -119,7 +121,6 @@ def listener():
 		# print('nameCol[0] : ', nameCol[0])
 		# print('Length nameCol[0] : ', len(nameCol[0]))
 		executor()
-		updateLastLine(nameCol)
 		# print("-----------------")
 
 def executor():
@@ -145,7 +146,7 @@ def executor():
 			logging.error(f"[{response.status_code}] {response.text}")
 		# print(response.text)
 		# print(response.status_code)
-
+	updateLastLine(nameCol)
 	logging.info("------- SESION END -------")
 
 def main():
