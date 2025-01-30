@@ -3,3 +3,5 @@ whatsappKey.txt
 .vscode
 *.log
 .DS_Store
+.venv
+test

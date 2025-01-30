@@ -9,10 +9,10 @@ import json
 import gspread
 import logging
 import time
+from os.path import isfile
 from logging.handlers import RotatingFileHandler
 from oauth2client.service_account import ServiceAccountCredentials
 from discord_webhook import DiscordWebhook
-
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
@@ -67,30 +67,37 @@ logging.basicConfig(
     handlers=[log_handler]  # Add the rotating handler
 )
 
-with open("whatsappKey.txt", 'r') as f:
-	headers['Authorization'] = "Bearer " + f.read()
+with open("key.json", "r") as f:
+	data = json.loads(f.read())
+	headers['Authorization'] = 'Bearer ' + data['whatsappKey']
+
+	global sheetCreds
+	sheetCreds = data['sheetsKey']
+
+	global sheetName
+	sheetName = data['sheetName']
 	logging.info(f"Succesfully read WhatsappKey.txt -> {headers['Authorization']}")
 
-creds = ServiceAccountCredentials.from_json_keyfile_name("key.json", scope)
-client = gspread.authorize(creds)
-logging.info(f"Succesfully read key.json")
 
-with open("remember.json", 'r') as f:
-	temp = json.loads(f.read())
-	global sheetName
-	sheetName = temp['sheetName']
+creds = ServiceAccountCredentials.from_json_keyfile_dict(sheetCreds, scope)
+client = gspread.authorize(creds)
 
 sheet = client.open(sheetName).sheet1
 
+def precheck():
+	if not isfile("remember.txt"):
+		with open("remember.txt") as f:
+			f.write("1")
+
 # * Modify the last line  for the next run of the program
 def updateLastLine(nameCol):
-	f = open("remember.json", 'r')
-	t = json.loads(f.read())
+	f = open("remember.txt", 'r')
+	t = int(f.read())
 	f.close()
-	t['lastLine'] = t["lastLine"] + len(nameCol)  # ! This points to last contact card + 1
-	logging.info(f"New line is {t['lastLine']}")
-	f = open('remember.json', 'w')
-	f.write(json.dumps(t))
+	t = t + len(nameCol)  # ! This points to last contact card + 1
+	logging.info(f"New line is {t}")
+	f = open('remember.txt', 'w')
+	f.write(str(t))
 
 def sendDiscordLog():
 	#Create a Discord webhook object
@@ -108,9 +115,8 @@ def sendDiscordLog():
 
 def listener():
 	lastNumber = None
-	with open("remember.json", 'r') as f:
-		d = json.loads(f.read())
-		lastNumber = d['lastLine']
+	with open("remember.txt", 'r') as f:
+		lastNumber = int(f.read())
 	
 	nameCol = sheet.get(f'C{lastNumber}:C')
 	# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
@@ -125,9 +131,8 @@ def listener():
 
 def executor():
 	lastNumber = None
-	with open("remember.json", 'r') as f:
-		d = json.loads(f.read())
-		lastNumber = d['lastLine']
+	with open("remember.txt", 'r') as f:
+		lastNumber = int(f.read())
 
 	nameCol = sheet.get(f'C{lastNumber}:C')
 	phNrCol = sheet.get(f'D{lastNumber}:D')
@@ -150,6 +155,7 @@ def executor():
 	logging.info("------- SESION END -------")
 
 def main():
+	precheck()
 	x = 0 
 	while True:
 		x += 1
