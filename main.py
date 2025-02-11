@@ -14,7 +14,7 @@ from logging.handlers import RotatingFileHandler
 from oauth2client.service_account import ServiceAccountCredentials
 from discord_webhook import DiscordWebhook
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
 url = "https://graph.facebook.com/v21.0/469064916301145/messages"
 
@@ -86,8 +86,8 @@ sheet = client.open(sheetName).sheet1
 
 def precheck():
 	if not isfile("remember.txt"):
-		with open("remember.txt") as f:
-			f.write("1")
+		with open("remember.txt", "w") as f:
+			f.write("2")
 
 # * Modify the last line  for the next run of the program
 def updateLastLine(nameCol):
@@ -113,12 +113,20 @@ def sendDiscordLog():
 	if(response.status_code == 200): logging.info("[200]Sent logfile.log to admin")
 	else: logging.error(f"[{response.status_code}]{response.text}")
 
+def transformPhoneNumber(phoneNr):
+	phoneNr = str(phoneNr)
+	if(phoneNr[0] == '7'): return phoneNr
+	phoneNumber = phoneNr
+	phoneNumber = phoneNr[4:7]+phoneNr[8:11]+phoneNr[12:15]
+	return phoneNumber
+
 def listener():
 	lastNumber = None
 	with open("remember.txt", 'r') as f:
 		lastNumber = int(f.read())
 	
-	nameCol = sheet.get(f'C{lastNumber}:C')
+	nameCol = sheet.get(f'B{lastNumber}:B')
+
 	# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
 	print("Waiting...")
 	if(len(nameCol) >=1 and len(nameCol[0]) != 0):
@@ -134,14 +142,14 @@ def executor():
 	with open("remember.txt", 'r') as f:
 		lastNumber = int(f.read())
 
-	nameCol = sheet.get(f'C{lastNumber}:C')
-	phNrCol = sheet.get(f'D{lastNumber}:D')
+	nameCol = sheet.get(f'B{lastNumber}:B')
+	phNrCol = sheet.get(f'A{lastNumber}:A', value_render_option='FORMULA')
 
 	print(phNrCol)
 
 	for i in range(len(nameCol)): # Go through every user and send them a custom message
 		print("index : ", i)
-		template['to'] = '40' + phNrCol[i][0]
+		template['to'] = '40' + transformPhoneNumber(phNrCol[i][0])
 		template['template']['components'][0]['parameters'][0]['text'] = nameCol[i][0]
 		# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
 		response = requests.request("POST", url, data=json.dumps(template), headers=headers)
@@ -150,7 +158,7 @@ def executor():
 		else:
 			logging.error(f"[{response.status_code}] {response.text}")
 		# print(response.text)
-		# print(response.status_code)
+		print(response.status_code)
 	updateLastLine(nameCol)
 	logging.info("------- SESION END -------")
 
