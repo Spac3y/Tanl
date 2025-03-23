@@ -1,7 +1,8 @@
 key.json
-whatsappKey.txt
 .vscode
 *.log
 .DS_Store
 .venv
 test
+*secret*
+ssl

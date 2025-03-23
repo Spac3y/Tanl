@@ -1,0 +1,70 @@
+from flask import Flask, redirect, request, session, url_for
+import google_auth_oauthlib.flow
+import googleapiclient.discovery
+import google.auth.transport.requests
+
+import os
+
+app = Flask(__name__)
+app.secret_key = '0e90999e0328b102327213dafd270da2d2d903c2f51d7468'
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+CLIENT_SECRETS_FILE = "client_secret.json"
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+@app.route("/")
+def index():
+    return '<a href="/login">Login with Google</a>'
+
+@app.route("/login")
+def login():
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES
+    )
+    flow.redirect_uri = url_for("callback", _external=True)
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
+
+@app.route("/callback")
+def callback():
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, state=session["state"]
+    )
+    flow.redirect_uri = url_for("callback", _external=True)
+    flow.fetch_token(authorization_response=request.url)
+
+    credentials = flow.credentials
+    session["credentials"] = credentials_to_dict(credentials)
+
+    return redirect(url_for("read_sheet"))
+
+@app.route("/read_sheet")
+def read_sheet():
+    if "credentials" not in session:
+        return redirect(url_for("login"))
+
+    credentials = google.oauth2.credentials.Credentials(**session["credentials"])
+    service = googleapiclient.discovery.build("sheets", "v4", credentials=credentials)
+
+    sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"  #TODO: Replace with user input
+    range_name = "Sheet1!A1:E10"
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
+    return str(result.get("values", []))
+
+def credentials_to_dict(credentials):
+    return {
+        "token": credentials.token,
+        "refresh_token": credentials.refresh_token,
+        "token_uri": credentials.token_uri,
+        "client_id": credentials.client_id,
+        "client_secret": credentials.client_secret,
+        "scopes": credentials.scopes,
+    }
+
+if __name__ == "__main__":
+    # app.run(debug=True)  # Enables HTTPS for local testing
+    app.run(ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
+    
