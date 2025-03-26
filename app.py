@@ -4,6 +4,10 @@ import googleapiclient.discovery
 import google.auth.transport.requests
 
 import os
+import subprocess
+from time import sleep
+
+processes = {}
 
 app = Flask(__name__)
 app.secret_key = '0e90999e0328b102327213dafd270da2d2d903c2f51d7468'
@@ -11,6 +15,36 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+def start_script(user_id):
+    if user_id in processes:
+        return f"Script for user {user_id} is already running."
+
+    process = subprocess.Popen(["python3", "your_script.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    processes[user_id] = process
+    return f"Started script for user {user_id}"
+
+def stop_script(user_id):
+    if user_id not in processes:
+        return f"No running script for user {user_id}."
+
+    process = processes.pop(user_id)
+    process.terminate()  # Graceful stop
+    process.wait()  # Ensure it's properly stopped
+    return f"Stopped script for user {user_id}"
+
+def check_script_status(user_id):
+    if user_id in processes and processes[user_id].poll() is None:
+        return f"Script for user {user_id} is running."
+    return f"No running script for user {user_id}."
+
+def monitor_and_restart():
+    while True:
+        for user_id, process in list(processes.items()):
+            if process.poll() is not None:  # If process has ended
+                print(f"Restarting script for user {user_id}")
+                start_script(user_id)
+        sleep(5)  # Check every 5 seconds
 
 @app.route("/")
 def index():
