@@ -1,5 +1,0 @@
-logging
-gspread
-requests
-oauth2client
-discord_webhook
