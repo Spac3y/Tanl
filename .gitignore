@@ -1,5 +1,4 @@
 key.json
-.vscode
 *.log
 .DS_Store
 .venv
