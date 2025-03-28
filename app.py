@@ -14,7 +14,8 @@ from time import sleep
 processes = {}
 
 app = Flask(__name__)
-app.secret_key = '0e90999e0328b102327213dafd270da2d2d903c2f51d7468'
+with open('secret_key.txt', 'r') as f:
+	app.secret_key = f.read()
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 CLIENT_SECRETS_FILE = "client_secret.json"
@@ -87,9 +88,12 @@ def read_sheet():
 	
 	# ! Get sheet_id from DB
 	sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"
+	# ! Figure out where to put sheet_range
+	sheet_range = ""
+
 	sh = gc.open_by_key(sheet_id)
 	worksheet = sh.sheet1
-	
+
 	data = worksheet.get_all_records()
 
 	return str(data)
