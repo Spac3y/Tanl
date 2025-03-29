@@ -8,3 +8,4 @@ ssl
 *.db
 __pycache__
 *database*
+message_templates/*

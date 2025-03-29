@@ -96,7 +96,7 @@ def read_sheet():
 
 	data = worksheet.get_all_records()
 
-	return str(data)
+	return (str(data),session['user_email'])
 
 	# credentials = google.oauth2.credentials.Credentials(**session["credentials"])
 	# service = googleapiclient.discovery.build("sheets", "v4", credentials=credentials)
