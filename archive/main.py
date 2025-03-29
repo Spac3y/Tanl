@@ -56,7 +56,7 @@ template = {
 
 # Configure the RotatingFileHandler
 log_handler = RotatingFileHandler(
-    "logfile.log",  # Log file name
+    "archive/logfile.log",  # Log file name
     maxBytes=1_000_000,  # Maximum file size in bytes (1 MB in this example)
     backupCount=0  # No backup files; overwrite the same file
 )
@@ -67,7 +67,7 @@ logging.basicConfig(
     handlers=[log_handler]  # Add the rotating handler
 )
 
-with open("key.json", "r") as f:
+with open("archive/key.json", "r") as f:
 	data = json.loads(f.read())
 	headers['Authorization'] = 'Bearer ' + data['whatsappKey']
 
@@ -85,18 +85,18 @@ client = gspread.authorize(creds)
 sheet = client.open(sheetName).sheet1
 
 def precheck():
-	if not isfile("remember.txt"):
-		with open("remember.txt", "w") as f:
+	if not isfile("archive/remember.txt"):
+		with open("archive/remember.txt", "w") as f:
 			f.write("2")
 
 # * Modify the last line  for the next run of the program
 def updateLastLine(nameCol):
-	f = open("remember.txt", 'r')
+	f = open("archive/remember.txt", 'r')
 	t = int(f.read())
 	f.close()
 	t = t + len(nameCol)  # ! This points to last contact card + 1
 	logging.info(f"New line is {t}")
-	f = open('remember.txt', 'w')
+	f = open('archive/remember.txt', 'w')
 	f.write(str(t))
 
 def sendDiscordLog():
@@ -122,7 +122,7 @@ def transformPhoneNumber(phoneNr):
 
 def listener():
 	lastNumber = None
-	with open("remember.txt", 'r') as f:
+	with open("archive/remember.txt", 'r') as f:
 		lastNumber = int(f.read())
 	
 	nameCol = sheet.get(f'B{lastNumber}:B')
@@ -139,11 +139,11 @@ def listener():
 
 def executor():
 	lastNumber = None
-	with open("remember.txt", 'r') as f:
+	with open("archive/remember.txt", 'r') as f:
 		lastNumber = int(f.read())
 
-	nameCol = sheet.get(f'B{lastNumber}:B')
-	phNrCol = sheet.get(f'A{lastNumber}:A', value_render_option='FORMULA')
+	nameCol = sheet.get(f'C{lastNumber}:C')
+	phNrCol = sheet.get(f'D{lastNumber}:D', value_render_option='FORMULA')
 
 	print(phNrCol)
 
@@ -157,7 +157,7 @@ def executor():
 			logging.info(f"[{response.status_code}] Sent {nameCol[i][0]} : 40{phNrCol[i][0]} template message named - {template['template']['name']}")
 		else:
 			logging.error(f"[{response.status_code}] {response.text}")
-		# print(response.text)
+		print(response.text)
 		print(response.status_code)
 	updateLastLine(nameCol)
 	logging.info("------- SESION END -------")
@@ -166,16 +166,19 @@ def main():
 	precheck()
 	x = 0 
 	while True:
-		x += 1
-		listener()
-		time.sleep(2)
-		# TODO: After 21600 sessions send the log through discord to custom server
-		if x == 21600: 
-		# if x == 10: # For testing
-			x = 0
-			sendDiscordLog()
-		# print(x)
-
+		try:
+			x += 1
+			listener()
+			time.sleep(2)
+			# TODO: After 21600 sessions send the log through discord to custom server
+			if x == 21600: 
+			# if x == 10: # For testing
+				x = 0
+				sendDiscordLog()
+			# print(x)
+		except KeyboardInterrupt:
+			print("\nStopping program")
+			quit()
 
 if __name__ == '__main__':
 	main()

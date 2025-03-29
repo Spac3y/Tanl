@@ -7,3 +7,4 @@ test
 ssl
 *.db
 __pycache__
+*database*
