@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin-Dashboards</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='dashboard/style.css') }}">
+	<script src="{{ url_for('static', filename='dashboard/javascript.js') }}"></script>
+
+</head>
+<body>
+	<div class="main-wrapper">
+		<h1> Tanl</h1>
+		<hr>
+		<h2>Introdu valoarea estimata a unui lead</h2>
+		<input id="value_input" type="number">
+		<hr>
+		<h2>Valoare/Raspuns</h2>
+		<h1 id="value_response">Loading...</h1>
+		<hr>
+		<h2>Mesaje vazute</h2>
+		<h1 id="seen_messages">Loading...</h1>
+		<hr>
+		<h2 >Mesaje raspunse</h2>
+		<h1 id="respond_messages">Loading...</h1>
+		
+	</div>
+</body>
+</html>

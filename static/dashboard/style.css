@@ -1,0 +1,11 @@
+html,
+body {
+	margin: 0 auto;
+	padding-left: 20%;
+	padding-right: 20%;
+	padding-top: 5%;
+}
+
+hr {
+	padding: 0%;
+}

@@ -6,6 +6,6 @@ test
 *secret*
 ssl
 *.db
-__pycache__
+__pycache__/
 *database*
 message_templates/*

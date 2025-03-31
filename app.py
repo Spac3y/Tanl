@@ -1,8 +1,8 @@
-from flask import Flask, redirect, request, session, url_for
+from flask import Flask, redirect, request, session, url_for, render_template
 import google.oauth2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
-import googleapiclient.discovery
+from googleapiclient.discovery import build
 import google.auth.transport.requests
 import gspread
 import json
@@ -19,7 +19,9 @@ with open('secret_key.txt', 'r') as f:
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 CLIENT_SECRETS_FILE = "client_secret.json"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/drive.file"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/drive.file",
+	"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" 
+	]
 
 def start_script(user_id):
 	if user_id in processes:
@@ -53,7 +55,14 @@ def monitor_and_restart():
 
 @app.route("/")
 def index():
-	return '<a href="/login">Login with Google</a>'
+	return render_template("login/index.html")
+
+@app.route("/logout")
+def logout():
+	if 'credentials' in session:
+		print("--- Logging user out ---")
+	session.clear()
+	return redirect(url_for('index'))
 
 @app.route("/login")
 def login():
@@ -61,7 +70,7 @@ def login():
 		CLIENT_SECRETS_FILE, scopes=SCOPES
 	)
 	flow.redirect_uri = url_for("callback", _external=True)
-	authorization_url, state = flow.authorization_url()
+	authorization_url, state = flow.authorization_url(access_type='offline', prompts='consent', include_granted_scopes='false')
 	session["state"] = state
 	return redirect(authorization_url)
 
@@ -75,37 +84,52 @@ def callback():
 
 	credentials = flow.credentials
 	session["credentials"] = credentials_to_dict(credentials)
+	print(credentials_to_dict(credentials))
 
 	return redirect(url_for("read_sheet"))
 
 @app.route("/read_sheet")
 def read_sheet():
 	if "credentials" not in session:
-		return redirect(url_for("login"))
+		return redirect(url_for('index'))
 	
-	credentials = google.oauth2.credentials.Credentials(**session["credentials"])
-	gc = gspread.authorize(credentials)
-	
-	# ! Get sheet_id from DB
-	sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"
-	# ! Figure out where to put sheet_range
-	sheet_range = ""
+	# ! Test
+	# Get the credentials from the session
+	credentials_info = session['credentials']
 
-	sh = gc.open_by_key(sheet_id)
-	worksheet = sh.sheet1
+	# Convert the stored dictionary back into a Credentials object
+	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
 
-	data = worksheet.get_all_records()
+	# Create the Google API service using the credentials
+	service = build('people', 'v1', credentials=credentials)
 
-	return (str(data),session['user_email'])
+	# Get the user's profile information (including email)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
 
+	# Extract the email address from the profile
+	email = profile.get('emailAddresses', [])[0].get('value')
+	print(f"!!{email}!!")
+	# ! End test
 	# credentials = google.oauth2.credentials.Credentials(**session["credentials"])
-	# service = googleapiclient.discovery.build("sheets", "v4", credentials=credentials)
+	# gc = gspread.authorize(credentials)
+	
+	# # ! Get sheet_id from DB
+	# sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"
+	# # ! Figure out where to put sheet_range
+	# sheet_range = ""
 
-	# sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"  #TODO: Replace with user input
+	# sh = gc.open_by_key(sheet_id)
+	# worksheet = sh.sheet1
 
-	# sheet = service.spreadsheets()
-	# result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
-	# return str(result.get("values", []))
+	# data = worksheet.get_all_records()
+
+	# return (str(data))
+
+@app.route("/dashboard")
+def admin_dashboard():
+	if 'credentials' not in session:
+		return redirect(url_for('index'))
+	return render_template("dashboard/index.html")
 
 def credentials_to_dict(credentials):
 	return {
@@ -119,5 +143,5 @@ def credentials_to_dict(credentials):
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing
-	app.run(ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
+	app.run(port=5100,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
 	
