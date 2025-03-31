@@ -48,6 +48,7 @@ def uploadTestDataUsersDB():
 	conn.commit()
 	
 	print("inserted testing data in DB")
+	conn.close()
 
 def initializeUserDB():
 	conn = sqlite3.connect("database.db")
@@ -67,6 +68,7 @@ def initializeUserDB():
 				);
 	""")
 	conn.commit()
+	conn.close()
 
 def initializaEventsDB():
 	conn = sqlite3.connect("database.db")
@@ -84,6 +86,7 @@ def initializaEventsDB():
 				);
 	""")
 	conn.commit()
+	conn.close()
 
 class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
@@ -133,7 +136,7 @@ class User:
 			return cursor.fetchone()
 
 	def update_messages_table(self, message_id,event_type):
-		with sqlite3("database.db") as conn:
+		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("""
 				INSERT INTO message_events (user_id, message_id, event_type) VALUES (?,?,?)
@@ -148,12 +151,12 @@ class User:
 
 	def listener(self):
 		# TODO: Check if there is a difference between the no of lines inside gSheet and in DB
-		nameCol = self.sheet.get(f'B{self.last_row}:B')
+		name_col = self.sheet.get(f'B{self.last_row}:B')
 
 		# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
 		print("Waiting...")
-		if(len(nameCol) >=1 and len(nameCol[0]) != 0):
-			print("nameCol : ", nameCol) 
+		if(len(name_col) >=1 and len(name_col[0]) != 0):
+			print("nameCol : ", name_col) 
 			self.sender()
 			# print("Length : ", len(nameCol))
 			# print('nameCol[0] : ', nameCol[0])
@@ -162,24 +165,32 @@ class User:
 	
 	def sender(self):
 		name_col = self.sheet.get(f'C{self.last_row}:C')
-		phoneNr_col = self.sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
+		if(len(name_col) >=1 and len(name_col[0]) != 0):
+			print("nameCol : ", name_col) 
+			phoneNr_col = self.sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
 
-		print(phoneNr_col)
+			print(phoneNr_col)
 
-		for i in range(len(name_col)): # Go through every user and send them a custom message
-			print("index : ", i)
-			self.message_template['to'] = '40' + transformPhoneNumber(phoneNr_col[i][0])
-			self.message_template['template']['components'][0]['parameters'][0]['text'] = name_col[i][0]
-			# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
-			response = request("POST", self.url, data=json.dumps(self.message_template), headers=headers)
+			for i in range(len(name_col)): # Go through every user and send them a custom message
+				print("index : ", i)
+				self.message_template['to'] = '40' + transformPhoneNumber(phoneNr_col[i][0])
+				self.message_template['template']['components'][0]['parameters'][0]['text'] = name_col[i][0]
+				# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
+				response = request("POST", self.url, data=json.dumps(self.message_template), headers=headers)
 
-			if(response.status_code == 200):
-				print(f"[{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
-			else:
-				print(f"[{response.status_code}] {response.text}")
+				if(response.status_code == 200):
+					# print(response.text, type(response.text))
+					response_json = json.loads(response.text)
+					message_id = response_json['messages'][0]['id']
 
-			# print(response.text)
-			print(response.status_code)
-		new_last_line = self.last_row + len(name_col)
-		self.update_last_line(new_last_line)
+					print(message_id)
+					self.update_messages_table(str(message_id),'sent')
+					print(f"[{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
+				else:
+					print(f"[{response.status_code}] {response.text}")
+
+				# print(response.text)
+				print(response.status_code)
+			new_last_line = self.last_row + len(name_col)
+			self.update_last_line(new_last_line)
 
