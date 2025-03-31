@@ -54,7 +54,7 @@ def monitor_and_restart():
 			if process.poll() is not None:  # If process has ended
 				print(f"Restarting script for user {user_id}")
 				start_script(user_id)
-		sleep(5)  # Check every 5 seconds
+		sleep(30)  # Check every 30 seconds
 
 def get_user_id_DB(email:str) -> int:
 	with sqlite3.connect("database.db") as conn:
@@ -66,17 +66,19 @@ def get_user_id_DB(email:str) -> int:
 		else:
 			raise ValueError("No matching data found!")
 
-def get_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
+def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
 		cursor.execute("""
-			SELECT * FROM message_events 
+			SELECT COUNT(*) FROM message_events 
 			WHERE user_id = ?
 			AND event_type = ?
 			AND timestamp > ?;
 		""", (user_id, event_type, timestamp))
 
-		rows = cursor.fetchall()
+		count = cursor.fetchone()[0]
+		print(count)
+		return count
 
 @app.route("/")
 def index():
@@ -113,14 +115,13 @@ def callback():
 	session["credentials"] = credentials.to_json()
 	# print(session["credentials"])
 
-	# return redirect(url_for("dashboard"))
+	# return redirect(url_for("admin_dashboard"))
 	return redirect(url_for("read_sheet"))
 
 @app.route("/user_info")
 def read_sheet():
-	if "credentials" not in session:
+	if 'credentials' not in session:
 		return redirect(url_for('index'))
-	
 	credentials_info = json.loads(session['credentials'])
 	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
 
@@ -131,17 +132,12 @@ def read_sheet():
 	user_id = get_user_id_DB(email)
 	print(f"USER ID: {user_id}")
 
-	user = User(user_id, credentials)
-	print(f"SHEET ID:{user.sheet_id}")
-	user.sender()
+	# user = User(user_id, credentials)
+	# print(f"SHEET ID:{user.sheet_id}")
+	# user.sender()
 
-	return (str(user_id) + '\n' + str(email))
-
-@app.route("/dashboard")
-def admin_dashboard():
-	if 'credentials' not in session:
-		return redirect(url_for('index'))
-	return render_template("dashboard/index.html")
+	var = get_len_message_sorted(user_id,'sent', '2025-03-31 15:00:00')
+	return render_template("dashboard/index.html", my_variable=var)
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing
