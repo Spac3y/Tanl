@@ -1,16 +1,22 @@
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import sqlite3
 import json
+from oauth2client.service_account import ServiceAccountCredentials
+from requests import request
+import sqlite3
 
-# TODO: Get these variables from sql db:
-# ?? | meta_id | 
+import google.oauth2
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+import googleapiclient.discovery #type:ignore
+import google
+import google.auth.transport.requests
+import gspread
 
 discordHeaders = {
 	"Content-Type": "application/json",
 	"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11"
 }
+
 headers = {
 	"Content-Type" : "application/json",
 	"Authorization" : None
@@ -52,8 +58,8 @@ def initializeUserDB():
 	cursor.execute("""
 				CREATE TABLE IF NOT EXISTS users (
 				user_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				sheet_id TEXT NOT NULL,
-				whatsapp_key TEXT NOT NULL,
+				sheet_id TEXT NOT NULL UNIQUE,
+				whatsapp_key TEXT NOT NULL UNIQUE,
 				whatsapp_id TEXT NOT NULL,
 				last_row INTEGER NOT NULL
 				);
@@ -69,7 +75,7 @@ def initializaEventsDB():
 				CREATE TABLE IF NOT EXISTS message_events (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				user_id INTEGER NOT NULL,
-				message_id TEXT NOT NULL,
+				message_id TEXT NOT NULL UNIQUE,
 				timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 				event_type TEXT CHECK(event_type IN ('sent', 'seen', 'responded')) NOT NULL,
 				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -78,9 +84,6 @@ def initializaEventsDB():
 	conn.commit()
 
 class user:
-	# conn = sqlite3.connect("database.db")
-	# cursor = conn.cursor()
-
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
 	def __init__(self, user_id):
@@ -116,29 +119,72 @@ class user:
 			return None
 
 	def get_user_data(self):
+		# TODO: Convert to fetchall() method to check for any duplicates
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("SELECT * FROM users WHERE user_id = ?" , (self.user_id,))
 			return cursor.fetchone()
+
+	def update_messages_table(self, message_id,event_type):
+		with sqlite3("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("""
+				INSERT INTO message_events (user_id, message_id, event_type) VALUES (?,?,?)
+			""", (self.user_id, message_id, event_type))
+			conn.commit()
 
 	# !! Figure it out shithead
 	# creds = ServiceAccountCredentials.from_json_keyfile_dict(self.sheet_creds, scope)
 	# client = gspread.authorize(creds)
 	# sheet = client.open_by_key(self.sheet_id)
 
-	def updateLastLine(last_row, self):
-		self.cursor.execute("UPDATE users SET last_row = ? WHERE user_id = ?", (last_row, self.user_id))
-		self.conn.commit()
+	creds = google.oauth2.credentials.Credentials()
 
-	def listener():
+	def updateLastLine(last_row, self):
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("UPDATE users SET last_row = ? WHERE user_id = ?", (last_row, self.user_id))
+			conn.commit()
+
+	def listener(self):
 		# * Bafta coaie
 		# !! This function is critical
 		# TODO: Based on the last row inside the db for the respective user.
 		# TODO: Check if there is a difference between the no of lines inside gSheet and in DB
-		pass
+		nameCol = sheet.get(f'B{self.last_row}:B')
+
+		# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
+		print("Waiting...")
+		if(len(nameCol) >=1 and len(nameCol[0]) != 0):
+			print("nameCol : ", nameCol) 
+			# print("Length : ", len(nameCol))
+			# print('nameCol[0] : ', nameCol[0])
+			# print('Length nameCol[0] : ', len(nameCol[0]))
+			self.sender()
+			# print("-----------------")
 	
-	def sender():
-		pass
+	def sender(self):
+		name_col = sheet.get(f'C{self.last_row}:C')
+		phoneNr_col = sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
+
+		print(phoneNr_col)
+
+		for i in range(len(name_col)): # Go through every user and send them a custom message
+			print("index : ", i)
+			self.message_template['to'] = '40' + transformPhoneNumber(phoneNr_col[i][0])
+			self.message_template['template']['components'][0]['parameters'][0]['text'] = name_col[i][0]
+			# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
+			response = request("POST", self.url, data=json.dumps(self.message_template), headers=headers)
+
+			if(response.status_code == 200):
+				print(f"[{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
+			else:
+				print(f"[{response.status_code}] {response.text}")
+
+			print(response.text)
+			print(response.status_code)
+		new_last_line = self.last_row + len(name_col)
+		self.updateLastLine(new_last_line)
 
 if __name__ == "__main__":
 	vlad = user(1)
