@@ -12,6 +12,8 @@ import os
 import subprocess
 from time import sleep
 
+from backend import User
+
 processes = {}
 
 app = Flask(__name__)
@@ -64,6 +66,18 @@ def get_user_id_DB(email:str) -> int:
 		else:
 			raise ValueError("No matching data found!")
 
+def get_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("""
+			SELECT * FROM message_events 
+			WHERE user_id = ?
+			AND event_type = ?
+			AND timestamp > ?;
+		""", (user_id, event_type, timestamp))
+
+		rows = cursor.fetchall()
+
 @app.route("/")
 def index():
 	return render_template("login/index.html")
@@ -97,12 +111,13 @@ def callback():
 	credentials = flow.credentials
 
 	session["credentials"] = credentials.to_json()
-	print(session["credentials"])
+	# print(session["credentials"])
 
+	# return redirect(url_for("dashboard"))
 	return redirect(url_for("read_sheet"))
 
-@app.route("/read_sheet")
-def read_sheet() -> str:
+@app.route("/user_info")
+def read_sheet():
 	if "credentials" not in session:
 		return redirect(url_for('index'))
 	
@@ -113,34 +128,20 @@ def read_sheet() -> str:
 	service = build('people', 'v1', credentials=credentials)
 	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
 	email = profile.get('emailAddresses', [])[0].get('value')
-	# print(f"!!{email}!!")
+	user_id = get_user_id_DB(email)
+	print(f"USER ID: {user_id}")
 
-	gc = gspread.authorize(credentials)
-	sheet_id = "1iz9IkmMlmFr3Zykjrqot0Y_0PQsQw3ZWZR7JZ4YFkH0"
-	# # ! Figure out where to put sheet_range
-	# sheet_range = ""
+	user = User(user_id, credentials)
+	print(f"SHEET ID:{user.sheet_id}")
+	user.sender()
 
-	sh = gc.open_by_key(sheet_id)
-	worksheet = sh.sheet1
-	data = worksheet.get_all_records()
-
-	return (str(data))
+	return (str(user_id) + '\n' + str(email))
 
 @app.route("/dashboard")
 def admin_dashboard():
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
 	return render_template("dashboard/index.html")
-
-def credentials_to_dict(credentials) -> dict:
-	return {
-		"token": credentials.token,
-		"refresh_token": credentials.refresh_token,
-		"token_uri": credentials.token_uri,
-		"client_id": credentials.client_id,
-		"client_secret": credentials.client_secret,
-		"scopes": credentials.scopes,
-	}
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing

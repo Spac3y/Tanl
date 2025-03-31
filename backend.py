@@ -85,33 +85,30 @@ def initializaEventsDB():
 	""")
 	conn.commit()
 
-class user:
+class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
-	def __init__(self, user_id):
+	def __init__(self, user_id:int, session_credentials: dict):
 		self.user_id = user_id
+		self.session_credentials = session_credentials
 		
 		current_user = self.get_user_data()
 		# print(current_user, type(current_user))
 
 		if current_user !=None:
 			# * Get all data based on user_id
-			self.sheet_id = current_user[0]
-			self.whatsapp_token = current_user[1]
-			self.whatsapp_id = current_user[2]
-			self.last_row = current_user[3] 
+			self.sheet_id = current_user[1]
+			self.whatsapp_token = current_user[2]
+			self.whatsapp_id = current_user[3]
+			self.email = current_user[4]
+			self.last_row = current_user[5] 
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
 			template_file_name = f"{self.user_id}.json"
 			self.message_template = self.load_json(filename=template_file_name)
 			headers["Authorization"] = "Bearer " + self.whatsapp_token
 
-			# !! Figure it out shithead
-			# * Bafta coaie
-			# creds = ServiceAccountCredentials.from_json_keyfile_dict(self.sheet_creds, scope)
-			# client = gspread.authorize(creds)
-			# sheet = client.open_by_key(self.sheet_id)
-
-			creds = google.oauth2.credentials.Credentials()
+			client = gspread.authorize(self.session_credentials)
+			self.sheet = client.open_by_key(self.sheet_id).sheet1
 
 		else:
 			raise ValueError(f"No user has been found with ID = {self.user_id}. Check if data is correct or check DB!")
@@ -143,16 +140,13 @@ class user:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
-	def update_last_line(last_row, self):
+	def update_last_line(self, last_row):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("UPDATE users SET last_row = ? WHERE user_id = ?", (last_row, self.user_id))
 			conn.commit()
 
 	def listener(self):
-		# * Bafta coaie
-		# !! This function is critical
-		# TODO: Based on the last row inside the db for the respective user.
 		# TODO: Check if there is a difference between the no of lines inside gSheet and in DB
 		nameCol = self.sheet.get(f'B{self.last_row}:B')
 
@@ -184,13 +178,8 @@ class user:
 			else:
 				print(f"[{response.status_code}] {response.text}")
 
-			print(response.text)
+			# print(response.text)
 			print(response.status_code)
 		new_last_line = self.last_row + len(name_col)
 		self.update_last_line(new_last_line)
 
-if __name__ == "__main__":
-	vlad = user(1)
-	# initializaEventsDB()
-	# initializeUserDB()
-	# uploadTestDataUsersDB()
