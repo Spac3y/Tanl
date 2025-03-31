@@ -4,32 +4,40 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Tanl - Login</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='login/style.css') }}">
+		<script src="{{ url_for('static', filename='login/javascript.js') }}"></script>
+
 </head>
 <body>
-	<image src="images/" alt="Tanl-Icon"></image>
-	<h2>Crează un cont</h2>
-	<div id="emailLogin">
-		<input type="email">
-		<button id="emailLoginButton">Sign in with email</button>
-	</div>
-	<p>or continue with</p>
-	<div id="googleLogin">
-		<a href="/login">
-			<image src="images/" alt="Google Icon"></image>
-			<button id="googleLoginButton" >Google</button>
-		</a>
-	</div>
-	<div>
-		<p>
-			By clicking continue, you agree to our 
-			<a href="/">Terms of Service</a> and 
-			<a href="/">Privacy Policy</a>
-		</p>
-	</div>
-	<div class="">
-		<a href="/logout">
-			<button> Log out</button>
-		</a>
+	<div class="main-wrapper">
+		<image src="images/" alt="Tanl-Icon"></image>
+		<h2>Crează un cont</h2>
+		<div id="emailLogin">
+			<input type="email">
+			<button id="emailLoginButton">Sign in with email</button>
+		</div>
+		<hr>
+		<p>or continue with</p>
+		<div id="googleLogin">
+			<a href="/login">
+				<image src="images/" alt="Google Icon"></image>
+				<button id="googleLoginButton" >Google</button>
+			</a>
+		</div>
+		<hr>
+		<div>
+			<p>
+				By clicking continue, you agree to our 
+				<a href="/">Terms of Service</a> and 
+				<a href="/">Privacy Policy</a>
+			</p>
+		</div>
+		<hr>
+		<div class="">
+			<a href="/logout">
+				<button> Log out</button>
+			</a>
+		</div>
 	</div>
 </body>
 </html>

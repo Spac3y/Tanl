@@ -38,7 +38,8 @@ def uploadTestDataUsersDB():
 	whatsapp_key = "EAAP4SJAmuEwBOZC4vEsZA6nkb5lbTrZCRv3ukKrO5S8oE2GMIOMVfL29PHzQBzQBbdTK9nafmzNMm3mKkQ1XxS1rGKHIjXZATG7vqjFoAomZCdPmZCW0UOGCZBTkfQkMpomHAMt6cDfEhbKV4JooZAryKOPd2iRwgWwlZCLWYxtDYxoIxZAHR7Sx51VrIp4OTQQwTgZAgZDZD"
 	whatsapp_id = "469064916301145"
 	last_row = 1
-	cursor.execute("INSERT INTO users (sheet_id, whatsapp_key, last_row, whatsapp_id) values (?,?,?,?)", (sheet_id, whatsapp_key, last_row, whatsapp_id))
+	email = "vladgavanescualex@gmail.com"
+	cursor.execute("INSERT INTO users (sheet_id, whatsapp_key, last_row, whatsapp_id, email) values (?,?,?,?,?)", (sheet_id, whatsapp_key, last_row, whatsapp_id,email))
 
 	user_id = 1
 	message_id = "wamid.HBgLNDA3MjE3NTI4NzYVAgARGBJENTBCNkM1OTM4QUQzOEFGQ0YA"
@@ -61,6 +62,7 @@ def initializeUserDB():
 				sheet_id TEXT NOT NULL UNIQUE,
 				whatsapp_key TEXT NOT NULL UNIQUE,
 				whatsapp_id TEXT NOT NULL,
+				email TEXT NOT NULL UNIQUE,
 				last_row INTEGER NOT NULL
 				);
 	""")
@@ -103,6 +105,14 @@ class user:
 			self.message_template = self.load_json(filename=template_file_name)
 			headers["Authorization"] = "Bearer " + self.whatsapp_token
 
+			# !! Figure it out shithead
+			# * Bafta coaie
+			# creds = ServiceAccountCredentials.from_json_keyfile_dict(self.sheet_creds, scope)
+			# client = gspread.authorize(creds)
+			# sheet = client.open_by_key(self.sheet_id)
+
+			creds = google.oauth2.credentials.Credentials()
+
 		else:
 			raise ValueError(f"No user has been found with ID = {self.user_id}. Check if data is correct or check DB!")
 	
@@ -133,14 +143,7 @@ class user:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
-	# !! Figure it out shithead
-	# creds = ServiceAccountCredentials.from_json_keyfile_dict(self.sheet_creds, scope)
-	# client = gspread.authorize(creds)
-	# sheet = client.open_by_key(self.sheet_id)
-
-	creds = google.oauth2.credentials.Credentials()
-
-	def updateLastLine(last_row, self):
+	def update_last_line(last_row, self):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("UPDATE users SET last_row = ? WHERE user_id = ?", (last_row, self.user_id))
@@ -151,21 +154,21 @@ class user:
 		# !! This function is critical
 		# TODO: Based on the last row inside the db for the respective user.
 		# TODO: Check if there is a difference between the no of lines inside gSheet and in DB
-		nameCol = sheet.get(f'B{self.last_row}:B')
+		nameCol = self.sheet.get(f'B{self.last_row}:B')
 
 		# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
 		print("Waiting...")
 		if(len(nameCol) >=1 and len(nameCol[0]) != 0):
 			print("nameCol : ", nameCol) 
+			self.sender()
 			# print("Length : ", len(nameCol))
 			# print('nameCol[0] : ', nameCol[0])
 			# print('Length nameCol[0] : ', len(nameCol[0]))
-			self.sender()
 			# print("-----------------")
 	
 	def sender(self):
-		name_col = sheet.get(f'C{self.last_row}:C')
-		phoneNr_col = sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
+		name_col = self.sheet.get(f'C{self.last_row}:C')
+		phoneNr_col = self.sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
 
 		print(phoneNr_col)
 
@@ -184,7 +187,7 @@ class user:
 			print(response.text)
 			print(response.status_code)
 		new_last_line = self.last_row + len(name_col)
-		self.updateLastLine(new_last_line)
+		self.update_last_line(new_last_line)
 
 if __name__ == "__main__":
 	vlad = user(1)
