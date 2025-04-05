@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, session, url_for, render_template
+from flask import Flask, redirect, request, session, url_for, render_template, jsonify
 import google.oauth2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -8,11 +8,14 @@ import gspread
 import json
 import sqlite3
 
+from datetime import datetime, timedelta
+from dateutil.relativedelta import	relativedelta
+
 import os
 import subprocess
 from time import sleep
 
-from backend import User
+from backend import User # * My creation
 
 processes = {}
 
@@ -67,6 +70,32 @@ def get_user_id_DB(email:str) -> int:
 			raise ValueError("No matching data found!")
 
 def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
+	if(event_type == "sent"):
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("""
+				SELECT COUNT(*) FROM message_events 
+				WHERE user_id = ?
+				AND timestamp > ?;
+			""", (user_id, timestamp))
+
+			count = cursor.fetchone()[0]
+			# print(count)
+			return count
+	elif (event_type == "seen"):
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("""
+				SELECT COUNT(*) FROM message_events 
+				WHERE user_id = ?
+				AND event_type IN ('seen', 'responded')
+				AND timestamp > ?;
+			""", (user_id, timestamp))
+
+			count = cursor.fetchone()[0]
+			# print(count)
+			return count
+		
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
 		cursor.execute("""
@@ -77,8 +106,26 @@ def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 		""", (user_id, event_type, timestamp))
 
 		count = cursor.fetchone()[0]
-		print(count)
+		# print(count)
 		return count
+
+def calculate_date_range(subtraction_value: str):
+	now = datetime.now()
+	
+	cases = {
+		"one_day": now - timedelta(days=1),
+		"two_day": now - timedelta(days=2),
+		"three_day": now - timedelta(days=3),
+		"five_day": now - timedelta(days=5),
+		"one_week": now - timedelta(weeks=1),
+		"two_week": now - timedelta(weeks=2),
+		"one_month": now - relativedelta(months=1),  # Correctly handles different month lengths
+		"six_month": now - relativedelta(months=6),  # Accounts for varying month lengths
+		"one_year": now - relativedelta(years=1)  # Correctly handles leap years
+	}
+	
+	result = cases.get(subtraction_value)
+	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
 
 @app.route("/")
 def index():
@@ -118,6 +165,16 @@ def callback():
 	# return redirect(url_for("admin_dashboard"))
 	return redirect(url_for("read_sheet"))
 
+@app.route('/submit_json', methods=['POST'])
+def retrieve_timeInterval():
+	data = request.get_json()
+	if not data or "choice" not in data:
+		return jsonify({"error" : "Invalid request"}), 400
+	return jsonify( {
+		"data" : data['choice'],
+		"message" : "Success!",
+	}), 200
+
 @app.route("/user_info")
 def read_sheet():
 	if 'credentials' not in session:
@@ -132,12 +189,16 @@ def read_sheet():
 	user_id = get_user_id_DB(email)
 	print(f"USER ID: {user_id}")
 
-	# user = User(user_id, credentials)
-	# print(f"SHEET ID:{user.sheet_id}")
-	# user.sender()
+	# vlad = User(user_id, credentials)
+	# vlad.sender()
 
-	var = get_len_message_sorted(user_id,'sent', '2025-03-31 15:00:00')
-	return render_template("dashboard/index.html", my_variable=var)
+	timeStamp =  '2024-03-31 15:00:00'
+
+	sent_count = get_len_message_sorted(user_id, 'sent', timeStamp)
+	seen_count = get_len_message_sorted(user_id, 'seen', timeStamp)
+	resp_count = get_len_message_sorted(user_id, 'responded', timeStamp)
+
+	return render_template("dashboard/index.html", sent_message=sent_count, seen_message=seen_count, resp_message=resp_count)
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing

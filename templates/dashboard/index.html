@@ -7,12 +7,50 @@
 	<script src="{{ url_for('static', filename='dashboard/javascript.js') }}"></script>
 </head>
 <body>
+	<script>
+		var sent_mess = "{{ sent_message }}";
+		var seen_mess = "{{ seen_message }}";
+		var resp_mess = "{{ resp_message }}";
+	</script>
 	<div class="main-wrapper">
-		<h1> Tanl</h1>
+		<h1> Tanl</h1> 
 		<hr>
 		<h2>Introdu valoarea estimata a unui lead</h2>
 		<input id="value_input" type="number">
 		<button onclick="updateEstimatedValue()" id="value_button">Save</button>
+		<hr>
+		<fieldset>
+			<legend>Alege intervalul:</legend>
+			<div>
+				<input type="radio" id="one_day" name="monsterFeature" checked />
+				<label for="one_day">1 zi</label>
+			</div><div>
+				<input type="radio" id="two_day" name="monsterFeature"  />
+				<label for="two_day">2 zile</label>
+			</div><div>
+				<input type="radio" id="three_day" name="monsterFeature"  />
+				<label for="three_day">3 zile</label>
+			</div><div>
+				<input type="radio" id="five_day" name="monsterFeature"  />
+				<label for="five_day">5 zile</label>
+			</div><div>
+				<input type="radio" id="one_week" name="monsterFeature"  />
+				<label for="one_week">1 sapt</label>
+			</div><div>
+				<input type="radio" id="two_week" name="monsterFeature"  />
+				<label for="two_week">2 sapt</label>
+			</div><div>
+				<input type="radio" id="one_month" name="monsterFeature"  />
+				<label for="one_month">1 luna</label>
+			</div><div>
+				<input type="radio" id="six_month" name="monsterFeature"  />
+				<label for="six_month">6 luni</label>
+			</div><div>
+				<input type="radio" id="one_year" name="monsterFeature"  />
+				<label for="one_year">1 ani</label>
+			</div>
+			
+		</fieldset>
 		<hr>
 		<h2>Valoare/Raspuns</h2>
 		<h1 id="value_response">Loading...</h1>
@@ -24,8 +62,5 @@
 		<h1 id="respond_messages">Loading...</h1>
 		
 	</div>
-	<script>
-		var value_response = "{{ my_variable }}";
-	</script>
 </body>
 </html>
