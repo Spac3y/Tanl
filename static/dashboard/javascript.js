@@ -3,7 +3,7 @@
 function getTimeInterval() {
 	let selectedOption = document.querySelector('input[name=monsterFeature]:checked')
 	if(!selectedOption) {
-		fetch('/retrieve_timeInterval', {
+		fetch('/submit_json', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ choice: "one_day" })
@@ -13,7 +13,7 @@ function getTimeInterval() {
 			.catch(error => console.error("ERROR: ", error))
 	}
 	console.log(selectedOption.id)
-	fetch('/retrieve_timeInterval', {
+	fetch('/submit_json', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
@@ -21,7 +21,20 @@ function getTimeInterval() {
 			})
 	})
 	.then(response => response.json())
-	.then(data => console.log("Response from FLASK: ",data))
+	.then(data => {
+		var quant = document.getElementById("value_input").value;
+
+		if (quant === "") {
+			alert("Introdu Valoarea aproximativa a unui lead");
+		} else {
+			var sent_text = document.getElementById("value_response");
+			sent_text.textContent = (Number(quant) * Number(data['sent_count']));
+			var seen_text = document.getElementById("seen_messages")
+			seen_text.textContent = (Number(quant) * Number(data['seen_count']));
+			var resp_text = document.getElementById("respond_messages");
+			resp_text.textContent = (Number(quant) * Number(data['resp_count']));
+		}
+	})
 	.catch(error => console.error("ERROR: ", error))
 }
 
@@ -34,13 +47,14 @@ function updateEstimatedValue() {
 	} else {
 		if(Number(quant) == NaN) {
 			console.log("Verifica daca valoarea introdusa este un numar!");
-		} else {
-			var sent_text = document.getElementById("value_response");
-			sent_text.textContent = (Number(quant) * Number(sent_mess));
-			var seen_text = document.getElementById("seen_messages")
-			seen_text.textContent = (Number(quant) * Number(seen_mess));
-			var resp_text = document.getElementById("respond_messages");
-			resp_text.textContent = (Number(quant) * Number(resp_mess));
 		}
+	// 	else {
+		// 	var sent_text = document.getElementById("value_response");
+		// 	sent_text.textContent = (Number(quant) * Number(sent_mess));
+		// 	var seen_text = document.getElementById("seen_messages")
+		// 	seen_text.textContent = (Number(quant) * Number(seen_mess));
+		// 	var resp_text = document.getElementById("respond_messages");
+		// 	resp_text.textContent = (Number(quant) * Number(resp_mess));
+		// }§
 	}
 }

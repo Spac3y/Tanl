@@ -166,14 +166,42 @@ def callback():
 	return redirect(url_for("read_sheet"))
 
 @app.route('/submit_json', methods=['POST'])
-def retrieve_timeInterval():
+def submit_json():
 	data = request.get_json()
 	if not data or "choice" not in data:
 		return jsonify({"error" : "Invalid request"}), 400
+	print("[ JSON Received from js Code ] : ", data['choice'])
+
+	if 'credentials' not in session:
+		return redirect(url_for('index'))
+	credentials_info = json.loads(session['credentials'])
+	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+
+	# * Get the users email
+	service = build('people', 'v1', credentials=credentials)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+	email = profile.get('emailAddresses', [])[0].get('value')
+	user_id = get_user_id_DB(email)
+
+	received_data = data['choice']
+	time_interval = calculate_date_range(received_data)
+	sent_count = get_len_message_sorted(user_id, 'sent', time_interval)
+	seen_count = get_len_message_sorted(user_id, 'seen', time_interval)
+	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
+
+	# print( {
+	# 	"sent_count" : sent_count,
+	# 	"seen_count" : seen_count,
+	# 	"resp_count" : resp_count,
+	# 	"message" : "Succes!"
+	# })
+
 	return jsonify( {
-		"data" : data['choice'],
-		"message" : "Success!",
-	}), 200
+		"sent_count" : sent_count,
+		"seen_count" : seen_count,
+		"resp_count" : resp_count,
+		"message" : "Succes!"
+	})
 
 @app.route("/user_info")
 def read_sheet():
@@ -191,15 +219,16 @@ def read_sheet():
 
 	# vlad = User(user_id, credentials)
 	# vlad.sender()
+	
+	# print(type(submit_json()))
+	# timeStamp =  '2024-03-31 15:00:00'
 
-	timeStamp =  '2024-03-31 15:00:00'
+	# sent_count = get_len_message_sorted(user_id, 'sent', timeStamp)
+	# seen_count = get_len_message_sorted(user_id, 'seen', timeStamp)
+	# resp_count = get_len_message_sorted(user_id, 'responded', timeStamp)
 
-	sent_count = get_len_message_sorted(user_id, 'sent', timeStamp)
-	seen_count = get_len_message_sorted(user_id, 'seen', timeStamp)
-	resp_count = get_len_message_sorted(user_id, 'responded', timeStamp)
-
-	return render_template("dashboard/index.html", sent_message=sent_count, seen_message=seen_count, resp_message=resp_count)
-
+	# return render_template("dashboard/index.html", sent_message=sent_count, seen_message=seen_count, resp_message=resp_count)
+	return render_template("dashboard/index.html")
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing
 	app.run(port=5100,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
