@@ -7,13 +7,17 @@
 	<script src="{{ url_for('static', filename='dashboard/javascript.js') }}"></script>
 </head>
 <body>
-	<script>
-		// var sent_mess = "{{ sent_message }}";
-		// var seen_mess = "{{ seen_message }}";
-		// var resp_mess = "{{ resp_message }}";
-	</script>
+	<!-- <script>
+		var sent_mess = "{{ sent_message }}";
+		var seen_mess = "{{ seen_message }}";
+		var resp_mess = "{{ resp_message }}";
+	 </script> -->
 	<div class="main-wrapper">
 		<h1> Tanl</h1> 
+		<hr>
+		<p>Status: -</p>
+		<button id="start">Start</button>
+		<button id="stop"> Stop </button>
 		<hr>
 		<h2>Introdu valoarea estimata a unui lead</h2>
 		<input id="value_input" type="number">

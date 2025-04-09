@@ -2,9 +2,8 @@ from flask import Flask, redirect, request, session, url_for, render_template, j
 import google.oauth2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-import google.auth.transport.requests
-import gspread
 import json
 import sqlite3
 
@@ -127,6 +126,34 @@ def calculate_date_range(subtraction_value: str):
 	result = cases.get(subtraction_value)
 	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
 
+def save_credentials_to_db(user_id : int, credentials : dict):
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("""
+			UPDATE users SET credentials_json = ? WHERE user_id = ?;
+		""", (credentials.to_json(), user_id))
+		conn.commit()
+
+def load_credentials_from_db(user_id : int):
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT credentials_json FROM users WHERE user_id = ?", (user_id, ))
+		row = cursor.fetchone()
+		if row:
+			return google.oauth2.credentials.Credentials.from_authorized_user_info(json.loads(row[0]))
+		return None
+
+def refresh_credentials(user_id: int) :
+	creds = load_credentials_from_db(user_id)
+	if not creds:
+		raise Exception(f"No credentials found for user: {user_id}")
+	
+	if creds.expired and creds.refresh_token:
+		creds.refresh(Request())
+		save_credentials_to_db(user_id, creds)
+		
+	return creds
+
 @app.route("/")
 def index():
 	return render_template("login/index.html")
@@ -160,9 +187,16 @@ def callback():
 	credentials = flow.credentials
 
 	session["credentials"] = credentials.to_json()
-	# print(session["credentials"])
+	
+	# * Get the users email
+	service = build('people', 'v1', credentials=credentials)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+	email = profile.get('emailAddresses', [])[0].get('value')
+	user_id = get_user_id_DB(email)
 
-	# return redirect(url_for("admin_dashboard"))
+	# * Save credentials to DB
+	save_credentials_to_db(user_id, session['credentials'])
+
 	return redirect(url_for("read_sheet"))
 
 @app.route('/submit_json', methods=['POST'])
@@ -170,7 +204,7 @@ def submit_json():
 	data = request.get_json()
 	if not data or "choice" not in data:
 		return jsonify({"error" : "Invalid request"}), 400
-	print("[ JSON Received from js Code ] : ", data['choice'])
+	# print("[ JSON Received from js Code ] : ", data['choice'])
 
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
@@ -207,27 +241,10 @@ def submit_json():
 def read_sheet():
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
-	credentials_info = json.loads(session['credentials'])
-	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
-
-	# * Get the users email
-	service = build('people', 'v1', credentials=credentials)
-	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
-	email = profile.get('emailAddresses', [])[0].get('value')
-	user_id = get_user_id_DB(email)
-	print(f"USER ID: {user_id}")
-
-	# vlad = User(user_id, credentials)
-	# vlad.sender()
 	
-	# print(type(submit_json()))
-	# timeStamp =  '2024-03-31 15:00:00'
-
-	# sent_count = get_len_message_sorted(user_id, 'sent', timeStamp)
-	# seen_count = get_len_message_sorted(user_id, 'seen', timeStamp)
-	# resp_count = get_len_message_sorted(user_id, 'responded', timeStamp)
-
-	# return render_template("dashboard/index.html", sent_message=sent_count, seen_message=seen_count, resp_message=resp_count)
+	# credentials_info = json.loads(session['credentials'])
+	# credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+	
 	return render_template("dashboard/index.html")
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing

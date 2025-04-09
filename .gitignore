@@ -10,3 +10,4 @@ __pycache__/
 *database*
 message_templates/*
 temp/
+init/
