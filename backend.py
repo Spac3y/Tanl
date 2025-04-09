@@ -31,8 +31,14 @@ class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
 	def __init__(self, user_id:int):
+		# * Fixed variables
+		self.name_col = 'C'
+		self.phone_col = 'D'
+
 		self.user_id = user_id
-		self.session_credentials = self.refresh_credentials(user_id)
+
+		self.thread = None
+
 
 		current_user = self.get_user_data()
 		# print(current_user, type(current_user))
@@ -48,9 +54,6 @@ class User:
 			template_file_name = f"{self.user_id}.json"
 			self.message_template = self.load_json(filename=template_file_name)
 			headers["Authorization"] = "Bearer " + self.whatsapp_token
-
-			client = gspread.authorize(self.session_credentials)
-			self.sheet = client.open_by_key(self.sheet_id).sheet1
 
 			self.is_running = self.get_script_status()
 
@@ -144,6 +147,10 @@ class User:
 			return
 		self.is_running = True
 		self.update_script_status("running")
+		self.thread = threading.Thread(target=self.listener, daemon=True)
+		self.thread.start()
+		print(f"[User {self.user_id}] Script started!!!")
+
 
 	def stop_listener(self):
 		if not self.is_running:
@@ -151,27 +158,51 @@ class User:
 			return
 		self.is_running = False
 		self.update_script_status("stopped")
+		self.thread.join()
+		print(f"[User {self.user_id}] Script stopped")
 
 	def listener(self):
-		# TODO: Check if there is a difference between the no of lines inside gSheet and in DB
-		name_col = self.sheet.get(f'B{self.last_row}:B')
+		try:
+			creds = self.refresh_credentials(self.user_id)
+			if not creds:
+				print(f"[User {self.user_id}] !!!!No creds found!!!!")
+				return
+			
+			client = gspread.authorize(creds)
+			self.sheet = client.open_by_key(self.sheet_id).sheet1
 
-		# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
-		print("Waiting...")
-		if(len(name_col) >=1 and len(name_col[0]) != 0):
-			print("nameCol : ", name_col) 
-			self.sender()
-			# print("Length : ", len(nameCol))
-			# print('nameCol[0] : ', nameCol[0])
-			# print('Length nameCol[0] : ', len(nameCol[0]))
-			# print("-----------------")
-		sleep(5)
+			while self.is_running:
+				try:
+					name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
+
+					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
+					print(f"[User {self.user_id}] Waiting...")
+					if(len(name_col) >=1 and len(name_col[0]) != 0):
+						print("nameCol : ", name_col) 
+						self.sender()
+						# print("Length : ", len(nameCol))
+						# print('nameCol[0] : ', nameCol[0])
+						# print('Length nameCol[0] : ', len(nameCol[0]))
+						# print("-----------------")
+					creds = self.refresh_credentials(self.user_id)
+				except Exception as e:
+					print(f"[User {self.user_id}] !!! Error: {e}")
+					sleep(30)
+				
+				sleep(5)
+		except Exception as e:
+			print(f"[User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
-		name_col = self.sheet.get(f'C{self.last_row}:C')
+		creds = self.refresh_credentials(self.user_id)
+
+		client = gspread.authorize(creds)
+		self.sheet = client.open_by_key(self.sheet_id).sheet1
+
+		name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
 		if(len(name_col) >=1 and len(name_col[0]) != 0):
 			print("nameCol : ", name_col) 
-			phoneNr_col = self.sheet.get(f'D{self.last_row}:D', value_render_option='FORMULA')
+			phoneNr_col = self.sheet.get(f'{self.phone_col}{self.last_row}:{self.phone_col}', value_render_option='FORMULA')
 
 			print(phoneNr_col)
 
