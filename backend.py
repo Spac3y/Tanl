@@ -80,7 +80,7 @@ class User:
 			""", (credentials.to_json(), user_id))
 			conn.commit()
 
-	def load_credentials_from_db(user_id : int):
+	def load_credentials_from_db(self,user_id : int):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("SELECT credentials_json FROM users WHERE user_id = ?", (user_id, ))
@@ -150,7 +150,6 @@ class User:
 		self.thread = threading.Thread(target=self.listener, daemon=True)
 		self.thread.start()
 		print(f"[User {self.user_id}] Script started!!!")
-
 
 	def stop_listener(self):
 		if not self.is_running:
@@ -227,5 +226,6 @@ class User:
 				# print(response.text)
 				print(response.status_code)
 			new_last_line = self.last_row + len(name_col)
+			self.last_row = new_last_line
 			self.update_last_line(new_last_line)
 

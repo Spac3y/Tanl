@@ -16,8 +16,6 @@ from time import sleep
 
 from backend import User # * My creation
 
-processes = {}
-
 app = Flask(__name__)
 with open('secret_key.txt', 'r') as f:
 	app.secret_key = f.read()
@@ -27,36 +25,6 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/drive.file",
 	"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", 
 	"openid"]
-
-def start_script(user_id:int):
-	if user_id in processes:
-		return f"Script for user {user_id} is already running."
-
-	process = subprocess.Popen(["python3", "your_script.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	processes[user_id] = process
-	return f"Started script for user {user_id}"
-
-def stop_script(user_id:int):
-	if user_id not in processes:
-		return f"No running script for user {user_id}."
-
-	process = processes.pop(user_id)
-	process.terminate()  # Graceful stop
-	process.wait()  # Ensure it's properly stopped
-	return f"Stopped script for user {user_id}"
-
-def check_script_status(user_id:int):
-	if user_id in processes and processes[user_id].poll() is None:
-		return f"Script for user {user_id} is running."
-	return f"No running script for user {user_id}."
-
-def monitor_and_restart():
-	while True:
-		for user_id, process in list(processes.items()):
-			if process.poll() is not None:  # If process has ended
-				print(f"Restarting script for user {user_id}")
-				start_script(user_id)
-		sleep(30)  # Check every 30 seconds
 
 def get_user_id_DB(email:str) -> int:
 	with sqlite3.connect("database.db") as conn:
@@ -131,7 +99,7 @@ def save_credentials_to_db(user_id : int, credentials : dict):
 		cursor = conn.cursor()
 		cursor.execute("""
 			UPDATE users SET credentials_json = ? WHERE user_id = ?;
-		""", (credentials.to_json(), user_id))
+		""", (credentials, user_id))
 		conn.commit()
 
 def load_credentials_from_db(user_id : int):
@@ -237,6 +205,18 @@ def submit_json():
 		"message" : "Succes!"
 	})
 
+@app.route('/change_status', methods=['POST'])
+def change_status():
+	...
+
+@app.route('/start')
+def start():
+	...
+
+@app.route('/stop')
+def stop():
+	...
+
 @app.route("/user_info")
 def read_sheet():
 	if 'credentials' not in session:
@@ -244,8 +224,24 @@ def read_sheet():
 	
 	# credentials_info = json.loads(session['credentials'])
 	# credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+
+	if 'credentials' not in session:
+		return redirect(url_for('index'))
+	credentials_info = json.loads(session['credentials'])
+	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+
+	# * Get the users email
+	service = build('people', 'v1', credentials=credentials)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+	email = profile.get('emailAddresses', [])[0].get('value')
+	user_id = get_user_id_DB(email)
+
+	user = User(user_id)
+	script_status = user.get_script_status()
 	
-	return render_template("dashboard/index.html")
+
+	return render_template("dashboard/index.html", script_st = script_status)
+
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing
 	app.run(port=5100,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
