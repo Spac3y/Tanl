@@ -9,3 +9,7 @@ body {
 hr {
 	padding: 0%;
 }
+
+#command_center > * {
+	display: inline;
+}

@@ -26,6 +26,8 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 	"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", 
 	"openid"]
 
+_user_cache = {}
+
 def get_user_id_DB(email:str) -> int:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -122,6 +124,25 @@ def refresh_credentials(user_id: int) :
 		
 	return creds
 
+def getUserID():
+	if 'credentials' not in session:
+		return redirect(url_for('index'))
+	credentials_info = json.loads(session['credentials'])
+	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+
+	# * Get the users email
+	service = build('people', 'v1', credentials=credentials)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+	email = profile.get('emailAddresses', [])[0].get('value')
+	user_id = get_user_id_DB(email)
+
+	return user_id
+
+def retUser(user_id: int):
+	if user_id not in _user_cache:
+		_user_cache[user_id] = User(user_id)
+	return _user_cache[user_id]
+
 @app.route("/")
 def index():
 	return render_template("login/index.html")
@@ -205,40 +226,35 @@ def submit_json():
 		"message" : "Succes!"
 	})
 
-@app.route('/change_status', methods=['POST'])
-def change_status():
-	...
+@app.route('/start-stop', methods=['POST'])
+def start_stop():
+	data = request.get_json()
+	print(data)
+	if not data or "choice" not in data or 'credentials' not in session:
+		return jsonify({"error" : "Invalid request"}), 400
 
-@app.route('/start')
-def start():
-	...
-
-@app.route('/stop')
-def stop():
-	...
+	received_data = data['choice']
+	if received_data == '0':
+		print(f"[User {getUserID()}] Stopping script")
+		retUser(getUserID()).stop_listener()
+		return jsonify({"message" : "Stopped script"}), 200
+	
+	elif received_data == '1':
+		print(f"[User {getUserID()}] Starting script")
+		retUser(getUserID()).launch_listener()
+		return jsonify({"message" : "Started script"}), 200
+	
+	print(f"[User {getUserID()}] Error invalid value provided")
+	return jsonify({"error" : "Invalid value provided"}), 400
 
 @app.route("/user_info")
 def read_sheet():
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
-	
-	# credentials_info = json.loads(session['credentials'])
-	# credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
 
-	if 'credentials' not in session:
-		return redirect(url_for('index'))
-	credentials_info = json.loads(session['credentials'])
-	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
-
-	# * Get the users email
-	service = build('people', 'v1', credentials=credentials)
-	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
-	email = profile.get('emailAddresses', [])[0].get('value')
-	user_id = get_user_id_DB(email)
-
-	user = User(user_id)
+	user = retUser(getUserID())
 	script_status = user.get_script_status()
-	
+	print(f"[User {getUserID()}] Script is running") if script_status else print(f"[User {getUserID()}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 

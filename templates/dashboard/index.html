@@ -4,7 +4,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Admin-Dashboards</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='dashboard/style.css') }}">
-	<script src="{{ url_for('static', filename='dashboard/javascript.js') }}"></script>
+	<script defer src="{{ url_for('static', filename='dashboard/javascript.js') }}"></script>
 </head>
 <body>
 	<script>
@@ -14,9 +14,11 @@
 	<div class="main-wrapper">
 		<h1> Tanl</h1> 
 		<hr>
-		<p>Status: -</p>
-		<button id="start">Start</button>
-		<button id="stop"> Stop </button>
+		<div id="command_center">
+			<p>Status: <p id="text_stauts"> - </p></p>
+			<button id="start">Start</button>
+			<button id="stop"> Stop </button>
+		</div>
 		<hr>
 		<h2>Introdu valoarea estimata a unui lead</h2>
 		<input id="value_input" type="number">
