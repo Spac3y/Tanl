@@ -150,7 +150,8 @@ def index():
 @app.route("/logout")
 def logout():
 	if 'credentials' in session:
-		print("--- Logging user out ---")
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}]--- Logging user out ---")
 	session.clear()
 	return redirect(url_for('index'))
 
@@ -226,6 +227,12 @@ def submit_json():
 		"message" : "Succes!"
 	})
 
+@app.route('/status', methods=['POST'])
+def status():
+	ps = retUser(getUserID()).get_script_status()
+	value = "Running" if ps == True else "Stopped"
+	return jsonify({'status' : value })
+
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
 	data = request.get_json()
@@ -235,16 +242,19 @@ def start_stop():
 
 	received_data = data['choice']
 	if received_data == '0':
-		print(f"[User {getUserID()}] Stopping script")
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}][User {getUserID()}] Stopping script")
 		retUser(getUserID()).stop_listener()
 		return jsonify({"message" : "Stopped script"}), 200
 	
 	elif received_data == '1':
-		print(f"[User {getUserID()}] Starting script")
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}][User {getUserID()}] Starting script")
 		retUser(getUserID()).launch_listener()
 		return jsonify({"message" : "Started script"}), 200
 	
-	print(f"[User {getUserID()}] Error invalid value provided")
+	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+	print(f"[{now}][User {getUserID()}] Error invalid value provided")
 	return jsonify({"error" : "Invalid value provided"}), 400
 
 @app.route("/user_info")
@@ -254,7 +264,8 @@ def read_sheet():
 
 	user = retUser(getUserID())
 	script_status = user.get_script_status()
-	print(f"[User {getUserID()}] Script is running") if script_status else print(f"[User {getUserID()}] Script is stopped")
+	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+	print(f"[{now}][User {getUserID()}] Script is running") if script_status else print(f"[{now}][User {getUserID()}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 

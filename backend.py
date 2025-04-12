@@ -13,6 +13,7 @@ import google.auth.transport.requests
 import gspread
 import threading
 
+from datetime import datetime
 from time import sleep
 
 headers = {
@@ -61,18 +62,21 @@ class User:
 			raise ValueError(f"No user has been found with ID = {self.user_id}. Check if data is correct or check DB!")
 	
 	def load_json(self, filename):
-		print(f"OPEN FILE: {filename}")
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}]OPEN FILE: {filename}")
 		try:
 			with open(f"message_templates/{filename}", "r", encoding="utf-8") as file:
 				return json.load(file)
 		except FileNotFoundError:
-			print("Error: File not found")
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+			print(f"[{now}] Error: File not found")
 			return None
 		except json.JSONDecodeError:
-			print("Error: Invalid Json Format")
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+			print(f"[{now}] Error: Invalid Json Format")
 			return None
 
-	def save_credentials_to_db(user_id : int, credentials : dict):
+	def save_credentials_to_db(self, user_id : int, credentials : dict):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("""
@@ -149,22 +153,27 @@ class User:
 		self.update_script_status("running")
 		self.thread = threading.Thread(target=self.listener, daemon=True)
 		self.thread.start()
-		print(f"[User {self.user_id}] Script started!!!")
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}][User {self.user_id}] Script started!!!")
 
 	def stop_listener(self):
 		if not self.is_running:
-			print(f"[User {self.user_id}] Script is already stopped")
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+			print(f"[{now}][User {self.user_id}] Script is already stopped")
 			return
 		self.is_running = False
 		self.update_script_status("stopped")
 		self.thread.join()
-		print(f"[User {self.user_id}] Script stopped")
+
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}][User {self.user_id}] Script stopped")
 
 	def listener(self):
 		try:
 			creds = self.refresh_credentials(self.user_id)
 			if not creds:
-				print(f"[User {self.user_id}] !!!!No creds found!!!!")
+				now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+				print(f"[{now}][User {self.user_id}] !!!!No creds found!!!!")
 				return
 			
 			client = gspread.authorize(creds)
@@ -175,7 +184,8 @@ class User:
 					name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
 
 					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
-					print(f"[User {self.user_id}] Waiting...")
+					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+					print(f"[{now}][User {self.user_id}] Waiting...")
 					if(len(name_col) >=1 and len(name_col[0]) != 0):
 						print("nameCol : ", name_col) 
 						self.sender()
@@ -185,12 +195,14 @@ class User:
 						# print("-----------------")
 					creds = self.refresh_credentials(self.user_id)
 				except Exception as e:
-					print(f"[User {self.user_id}] !!! Error: {e}")
+					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+					print(f"[{now}][User {self.user_id}] !!! Error: {e}")
 					sleep(30)
 				
 				sleep(5)
 		except Exception as e:
-			print(f"[User {self.user_id}] !!! Failed to start: {e}")
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+			print(f"[{now}][User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
 		creds = self.refresh_credentials(self.user_id)
@@ -219,9 +231,11 @@ class User:
 
 					print(message_id)
 					self.update_messages_table(str(message_id),'sent')
-					print(f"[{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
+					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+					print(f"[{now}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
 				else:
-					print(f"[{response.status_code}] {response.text}")
+					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+					print(f"[{now}][User {self.user_id}][{response.status_code}] {response.text}")
 
 				# print(response.text)
 				print(response.status_code)
