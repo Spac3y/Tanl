@@ -16,6 +16,9 @@ from time import sleep
 
 from backend import User # * My creation
 
+# Your pre-shared token – make sure this matches the one you set in Meta dashboard
+VERIFY_TOKEN = "my_super_secret_token"
+
 app = Flask(__name__)
 with open('secret_key.txt', 'r') as f:
 	app.secret_key = f.read()
@@ -143,6 +146,15 @@ def retUser(user_id: int):
 		_user_cache[user_id] = User(user_id)
 	return _user_cache[user_id]
 
+def checkAccountByEmail(email: str) -> bool:
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT 1 FROM users WHERE email = ? LIMIT 1", (email,))
+		exists = cursor.fetchone() is not None
+
+		if exists: return True
+		return False
+
 @app.route("/")
 def index():
 	return render_template("login/index.html")
@@ -268,6 +280,43 @@ def read_sheet():
 	print(f"[{now}][User {getUserID()}] Script is running") if script_status else print(f"[{now}][User {getUserID()}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
+
+@app.route("/profile")
+def profile():
+	return render_template('profile/index.html')
+
+@app.route("/profile-updates", methods=['GET', 'POST'])
+def profile_updates():
+	if 'credentials' not in session:
+		return 401
+	else: 
+		if request.method == 'GET':
+			# TODO: This method is used to insert existing data into html text fields
+			...
+		elif request.method == 'POST':
+			# TODO: Update user data
+			...
+		else: return 405
+
+@app.route("/webhook", methods=['POST'])
+def webhook():
+	if request.method == 'GET':
+		mode = request.args.get('hub.mode')
+		token = request.args.get('hub.verify_token')
+		challenge = request.args.get('hub.challenge')
+
+		if mode == 'subscribe' and token == VERIFY_TOKEN:
+			print("Webhook verified successfully!")
+			return challenge, 200
+		else:
+			print("Webhook verification failed.")
+			return "Forbidden", 403
+	elif request.method =='POST':
+		data = request.json
+		# TODO Implement data collection and recognition idk man...
+	else:
+		return jsonify("Method not allowed"), 405
+	return 200
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing

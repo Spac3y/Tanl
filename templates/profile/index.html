@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Edit Profile</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='profile/style.css') }}">
+		<script src="{{ url_for('static', filename='profile/javascript.js') }}"></script>
+
+</head>
+<body>
+	<div class="main-wrapper">
+		<h1> Editare date profil</h1>
+		<h3>E-mail</h3>
+		<input id="profile-email" type="email">
+		<hr>
+		<h3>Whatsapp Phone Number ID</h3>
+		<input id="profile-whatsapp-number" type="text">
+		<hr>
+		<h3>Whatsapp token</h3>
+		<input id="profile-whatsapp-token" type="text">
+		<hr>
+		<h3>Google sheet ID</h3>
+		<input id="profile-google-sheedID" text="text">
+		<hr>
+		<button id="profile-save"> Salveaza schimbarile </button>
+		<button id="profile-check-account">Verifica daca ai cont</button>
+		<p>* pentru a verifica daca ai cont introdu emailul si apasa butonul</p>
+
+	</div>
+</body>
+</html>
