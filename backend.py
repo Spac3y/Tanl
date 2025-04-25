@@ -50,9 +50,9 @@ class User:
 			self.whatsapp_token = current_user[2]
 			self.whatsapp_id = current_user[3]
 			self.email = current_user[4]
-			self.last_row = current_user[5] 
+			self.last_row = current_user[6] 
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
-			template_file_name = f"{self.user_id}.json"
+			template_file_name = "template.json"
 			self.message_template = self.load_json(filename=template_file_name)
 			headers["Authorization"] = "Bearer " + self.whatsapp_token
 
@@ -63,7 +63,7 @@ class User:
 	
 	def load_json(self, filename):
 		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}]OPEN FILE: {filename}")
+		# print(f"[{now}]OPEN FILE: {filename}")
 		try:
 			with open(f"message_templates/{filename}", "r", encoding="utf-8") as file:
 				return json.load(file)
@@ -93,16 +93,20 @@ class User:
 				return google.oauth2.credentials.Credentials.from_authorized_user_info(json.loads(row[0]))
 			return None
 
-	def refresh_credentials(self, user_id: int) :
-		creds = self.load_credentials_from_db(user_id)
-		if not creds:
-			raise Exception(f"No credentials found for user: {user_id}")
-		
-		if creds.expired and creds.refresh_token:
-			creds.refresh(Request())
-			self.save_credentials_to_db(user_id, creds)
+	def refresh_credentials(self, user_id: int):
+		try:
+			creds = self.load_credentials_from_db(user_id)
+			if not creds:
+				raise Exception(f"No credentials found for user: {user_id}")
 			
-		return creds
+			if creds.expired and creds.refresh_token:
+				creds.refresh(Request())
+				self.save_credentials_to_db(user_id, creds)
+				
+			return creds
+		except Exception as e:
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+			print(f"[{now}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
 	
 	def get_user_data(self):
 		# TODO: Convert to fetchall() method to check for any duplicates
@@ -134,6 +138,10 @@ class User:
 				status = result[0]
 				if status == 'running': return True
 				elif status == 'stopped': return False
+			else:
+				cursor.execute("INSERT INTO script_status (user_id, status) VALUES (?, ?)", (self.user_id, "stopped"))
+				conn.commit()
+				return False
 			
 			raise ValueError(f"Either no value was found for USER_ID: {self.user_id} OR bad value from status_script: {result}")
 
@@ -170,24 +178,33 @@ class User:
 
 	def listener(self):
 		try:
+			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+
 			creds = self.refresh_credentials(self.user_id)
 			if not creds:
 				now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 				print(f"[{now}][User {self.user_id}] !!!!No creds found!!!!")
 				return
 			
+			# try:	
+			# * Works
 			client = gspread.authorize(creds)
 			self.sheet = client.open_by_key(self.sheet_id).sheet1
+			# except Exception as e:
+			# 	print(f"[{now}][User {self.user_id}] Gspread auth error 2: {e}")
 
 			while self.is_running:
 				try:
-					name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
+					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+
+					sheet_range = f"{self.name_col}{self.last_row}:{self.name_col}"
+					# print("--%s--" %sheet_range)
+					name_column = self.sheet.get(sheet_range)
 
 					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
-					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 					print(f"[{now}][User {self.user_id}] Waiting...")
-					if(len(name_col) >=1 and len(name_col[0]) != 0):
-						print("nameCol : ", name_col) 
+					if(len(name_column) >=1 and len(name_column[0]) != 0):
+						print("nameCol : ", name_column) 
 						self.sender()
 						# print("Length : ", len(nameCol))
 						# print('nameCol[0] : ', nameCol[0])
@@ -196,7 +213,7 @@ class User:
 					creds = self.refresh_credentials(self.user_id)
 				except Exception as e:
 					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-					print(f"[{now}][User {self.user_id}] !!! Error: {e}")
+					print(f"[{now}][User {self.user_id}] !-! Error: {e}")
 					sleep(30)
 				
 				sleep(5)
@@ -212,7 +229,7 @@ class User:
 
 		name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
 		if(len(name_col) >=1 and len(name_col[0]) != 0):
-			print("nameCol : ", name_col) 
+			# print("nameCol : ", name_col) 
 			phoneNr_col = self.sheet.get(f'{self.phone_col}{self.last_row}:{self.phone_col}', value_render_option='FORMULA')
 
 			print(phoneNr_col)

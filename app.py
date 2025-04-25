@@ -245,6 +245,8 @@ def status():
 	value = "Running" if ps == True else "Stopped"
 	return jsonify({'status' : value })
 
+# ! When pressing the stop button it takes a lot of time to process 
+# ! - may be caused by the current error where it doesn't load properly the sheet (backend.py)
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
 	data = request.get_json()
