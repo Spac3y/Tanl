@@ -4,9 +4,9 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Edit Profile</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='profile/style.css') }}">
-		<script src="{{ url_for('static', filename='profile/javascript.js') }}"></script>
-
+	<link rel="stylesheet" href="{{ url_for('static', filename='profile/style.css') }}">
+	<script defer src="{{ url_for('static', filename='profile/javascript.js') }}"></script>
+	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
 </head>
 <body>
 	<div class="main-wrapper">
@@ -25,8 +25,8 @@
 		<hr>
 		<button id="profile-save"> Salveaza schimbarile </button>
 		<button id="profile-check-account">Verifica daca ai cont</button>
-		<p>* pentru a verifica daca ai cont introdu emailul si apasa butonul</p>
-
+		<p>* pentru a verifica daca ai cont introduceti emailul si apasa butonul</p>
+		<p>Account check: <p id="email-status">Not found</p></p>
 	</div>
 </body>
 </html>

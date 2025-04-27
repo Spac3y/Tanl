@@ -25,3 +25,8 @@ fieldset {
 	display: flex;
 	flex-direction: row;
 }
+
+#logo {
+	width: 7.5%;
+	height: 7.5%;
+}

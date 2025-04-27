@@ -4,13 +4,13 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Tanl - Login</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='login/style.css') }}">
-		<script src="{{ url_for('static', filename='login/javascript.js') }}"></script>
-
+	<link rel="stylesheet" href="{{ url_for('static', filename='login/style.css') }}">
+	<script src="{{ url_for('static', filename='login/javascript.js') }}"></script>
+	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
 </head>
 <body>
 	<div class="main-wrapper">
-		<image src="images/" alt="Tanl-Icon"></image>
+		<image id="logo" src="static/favicon.png" alt="Tanl-Icon"></image>
 		<h2>Crează un cont</h2>
 		<div id="emailLogin">
 			<input type="email">
