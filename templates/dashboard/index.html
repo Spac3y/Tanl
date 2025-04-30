@@ -21,6 +21,10 @@
 			<button id="stop"> Stop </button>
 		</div>
 		<hr>
+		<form action="{{ url_for('profile')}}">
+			<button type="submit">Profile</button>
+		</form>
+		<hr>
 		<h2>Introdu valoarea estimata a unui lead</h2>
 		<input id="value_input" type="number">
 		<button onclick="updateEstimatedValue()" id="value_button">Save</button>

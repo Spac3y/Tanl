@@ -291,14 +291,31 @@ def profile():
 def profile_updates():
 	if 'credentials' not in session:
 		return 401
-	else: 
+	else:
 		if request.method == 'GET':
-			# TODO: This method is used to insert existing data into html text fields
-			...
+			user = retUser(getUserID())
+			response = {
+				"email": user.get_user_data()[4],
+				"whatsapp_number": user.get_user_data()[3],
+				"whatsapp_token": user.get_user_data()[2],
+				"google_sheetID": user.get_user_data()[1] 
+			}
+			return jsonify(response), 200
 		elif request.method == 'POST':
+			data = request.get_json()
 			# TODO: Update user data
-			...
-		else: return 405
+			if data['choice'] == 0: # * choice = 0 -> Check for email in db
+				received_data = data['email']
+				result = None
+				if(checkAccountByEmail(received_data)): 
+					result = "true"
+				else: 
+					result = "false"
+				return jsonify({"result": result}), 200
+			elif data['choice'] == 1: # * choice = 1 -> Update values for user
+				return
+		else:
+			return 405
 
 @app.route("/webhook", methods=['POST'])
 def webhook():

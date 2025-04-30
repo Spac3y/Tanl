@@ -50,7 +50,6 @@ stop_button.addEventListener("click", () => {
 	.catch(error => console.error("ERROR: ", error))
 })
 
-
 function getTimeInterval() {
 	let selectedOption = document.querySelector('input[name=monsterFeature]:checked')
 	if(!selectedOption) {

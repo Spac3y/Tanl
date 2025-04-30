@@ -11,6 +11,10 @@
 <body>
 	<div class="main-wrapper">
 		<h1> Editare date profil</h1>
+		<form action="{{ url_for('read_sheet')}}">
+			<button type="submit">Dashboard</button>
+		</form>
+		<hr>
 		<h3>E-mail</h3>
 		<input id="profile-email" type="email">
 		<hr>
@@ -21,7 +25,7 @@
 		<input id="profile-whatsapp-token" type="text">
 		<hr>
 		<h3>Google sheet ID</h3>
-		<input id="profile-google-sheedID" text="text">
+		<input id="profile-google-sheetID" text="text">
 		<hr>
 		<button id="profile-save"> Salveaza schimbarile </button>
 		<button id="profile-check-account">Verifica daca ai cont</button>
