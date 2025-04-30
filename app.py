@@ -313,7 +313,22 @@ def profile_updates():
 					result = "false"
 				return jsonify({"result": result}), 200
 			elif data['choice'] == 1: # * choice = 1 -> Update values for user
-				return
+				vEmail = data['email']
+				vWToken = data['wToken']
+				vWNumber = data['wNumber']
+				vGSheetID = data['gSheetID']
+
+				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
+					print("Account found with email:", vEmail)
+					current_user = retUser(get_user_id_DB(vEmail))
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID)):
+						return jsonify({ "result" : "succes" }), 200
+					else: 
+						return jsonify({"result" : "error"}), 500
+				else: # * Create new account
+					print("Account not found")
+					return jsonify({"result" : "not_found"}), 404
+				# return jsonify({ "result" : "succes" }), 200
 		else:
 			return 405
 

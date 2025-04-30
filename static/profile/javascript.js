@@ -64,7 +64,7 @@ button_check_account.addEventListener("click", () => {
 	.catch(error => console.error("!ERROR: ", error))
 })
 
-button_save_changes.addEventListener("click", () => {
+button_save_changes.addEventListener("click", () => { // * Update values account
 	email = input_email
 	whatsapp_number = input_whatsapp_number
 	whatsapp_token = input_whatsapp_token
@@ -78,13 +78,22 @@ button_save_changes.addEventListener("click", () => {
 		method: 'POST',
 		headers: { 'Content-Type' : 'application/json' },
 		body: JSON.stringify({
-			email : email,
-			wNumber : whatsapp_number,
-			wToken : whatsapp_token,
-			gSheetID : google_sheetID
-		}).then(response => response.json())
-		.then(data => {
-			if(data.response === 200) console.log("Updated account details successfully");
-		}).catch(error => console.log("ERROR: ", error))
+			choice : 1,
+			email: email.value,
+			wNumber: whatsapp_number.value,
+			wToken: whatsapp_token.value,
+			gSheetID: google_sheetID.value
+		})
 	})
+	.then(response => response.json())
+	.then(data => {
+		console.log(data, data.response)
+		if(data.response === 200) console.log("Updated account details successfully");
+		if(data.response === 500) {
+			alert("Error updating values inside db - Internal Server Error");
+			console.error("Internal server errror");
+		}
+
+	})
+	.catch(error => console.log("ERROR: ", error))
 })

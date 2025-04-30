@@ -123,6 +123,14 @@ class User:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
+	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str) -> bool:
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("UPDATE users SET email = ?, whatsapp_key = ?, whatsapp_id = ?, sheet_id = ? WHERE user_id = ?", (email, wToken, wNumber, gSheetID, self.user_id))
+			conn.commit()
+		return True
+
+
 	def update_last_line(self, last_row):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
