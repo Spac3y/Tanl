@@ -39,7 +39,7 @@ def get_user_id_DB(email:str) -> int:
 		if result:
 			return result[0]
 		else:
-			raise ValueError("No matching data found!")
+			return None
 
 def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 	if(event_type == "sent"):
@@ -128,6 +128,15 @@ def refresh_credentials(user_id: int) :
 	return creds
 
 def getUserID():
+	email =  getEmail()
+	user_id = get_user_id_DB(email)
+	if user_id is not None:
+		return [1, user_id]
+	else:
+		print(f"[{email}]User not found in DB but email is accepted | Redirect -> Create account")
+		return [-1, email]
+
+def getEmail() -> str:
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
 	credentials_info = json.loads(session['credentials'])
@@ -137,9 +146,7 @@ def getUserID():
 	service = build('people', 'v1', credentials=credentials)
 	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
 	email = profile.get('emailAddresses', [])[0].get('value')
-	user_id = get_user_id_DB(email)
-
-	return user_id
+	return email
 
 def retUser(user_id: int):
 	if user_id not in _user_cache:
@@ -225,13 +232,6 @@ def submit_json():
 	seen_count = get_len_message_sorted(user_id, 'seen', time_interval)
 	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
 
-	# print( {
-	# 	"sent_count" : sent_count,
-	# 	"seen_count" : seen_count,
-	# 	"resp_count" : resp_count,
-	# 	"message" : "Succes!"
-	# })
-
 	return jsonify( {
 		"sent_count" : sent_count,
 		"seen_count" : seen_count,
@@ -241,7 +241,7 @@ def submit_json():
 
 @app.route('/status', methods=['POST'])
 def status():
-	ps = retUser(getUserID()).get_script_status()
+	ps = retUser(getUserID()[1]).get_script_status()
 	value = "Running" if ps == True else "Stopped"
 	return jsonify({'status' : value })
 
@@ -257,35 +257,42 @@ def start_stop():
 	received_data = data['choice']
 	if received_data == '0':
 		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {getUserID()}] Stopping script")
-		retUser(getUserID()).stop_listener()
+		print(f"[{now}][User {getUserID()[1]}] Stopping script")
+		retUser(getUserID()[1]).stop_listener()
 		return jsonify({"message" : "Stopped script"}), 200
 	
 	elif received_data == '1':
 		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {getUserID()}] Starting script")
-		retUser(getUserID()).launch_listener()
+		print(f"[{now}][User {getUserID()[1]}] Starting script")
+		retUser(getUserID()[1]).launch_listener()
 		return jsonify({"message" : "Started script"}), 200
 	
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	print(f"[{now}][User {getUserID()}] Error invalid value provided")
+	print(f"[{now}][User {getUserID()[1]}] Error invalid value provided")
 	return jsonify({"error" : "Invalid value provided"}), 400
 
 @app.route("/user_info")
 def read_sheet():
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
+	
+	user_id = getUserID()
 
-	user = retUser(getUserID())
+	if getUserID()[0] == -1:
+		return redirect(url_for('profile', force_redirect=1, email=user_id[1]))
+
+	user = retUser(user_id[1])
 	script_status = user.get_script_status()
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	print(f"[{now}][User {getUserID()}] Script is running") if script_status else print(f"[{now}][User {getUserID()}] Script is stopped")
+	print(f"[{now}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
 @app.route("/profile")
 def profile():
-	return render_template('profile/index.html')
+	force_redirect = request.args.get('force_redirect', default=0, type=int)
+	email = request.args.get('email', default=getEmail(), type=str)
+	return render_template('profile/index.html', force_redir = force_redirect, email = email)
 
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
@@ -293,7 +300,7 @@ def profile_updates():
 		return 401
 	else:
 		if request.method == 'GET':
-			user = retUser(getUserID())
+			user = retUser(getUserID()[1])
 			response = {
 				"email": user.get_user_data()[4],
 				"whatsapp_number": user.get_user_data()[3],
@@ -328,7 +335,6 @@ def profile_updates():
 				else: # * Create new account
 					print("Account not found")
 					return jsonify({"result" : "not_found"}), 404
-				# return jsonify({ "result" : "succes" }), 200
 		else:
 			return 405
 
@@ -351,6 +357,10 @@ def webhook():
 	else:
 		return jsonify("Method not allowed"), 405
 	return 200
+
+@app.errorhandler(404)
+def page_not_found(e):
+	return render_template('404/index.html'), 404
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing

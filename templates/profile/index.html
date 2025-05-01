@@ -9,6 +9,10 @@
 	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
 </head>
 <body>
+	<script>
+		var force_redirect = "{{ force_redir }}";
+		var email = "{{ email }}";
+	</script>
 	<div class="main-wrapper">
 		<h1> Editare date profil</h1>
 		<form action="{{ url_for('read_sheet')}}">
@@ -26,7 +30,6 @@
 		<hr>
 		<h3>Google sheet ID</h3>
 		<input id="profile-google-sheetID" text="text">
-		<hr>
 		<button id="profile-save"> Salveaza schimbarile </button>
 		<button id="profile-check-account">Verifica daca ai cont</button>
 		<p>* pentru a verifica daca ai cont introduceti emailul si apasa butonul</p>
