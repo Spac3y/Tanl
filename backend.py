@@ -28,11 +28,19 @@ def transformPhoneNumber(phoneNr):
 	phoneNumber = phoneNr[4:7]+phoneNr[8:11]+phoneNr[12:15]
 	return phoneNumber
 
+def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str) -> bool:
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor .execute("INSERT INTO users (sheet_id, whatsapp_key, whatsapp_id, email, last_row) VALUES (?,?,?,?,1)",
+		(sheet_id, whatsapp_key, whatsapp_id, email))
+		conn.commit()
+		return True
+
 class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
 	def __init__(self, user_id:int):
-		# * Fixed variables
+		# TODO: Set these variables to be edited in profile page
 		self.name_col = 'C'
 		self.phone_col = 'D'
 

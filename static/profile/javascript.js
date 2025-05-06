@@ -2,14 +2,18 @@
 button_check_account = document.getElementById("profile-check-account")
 button_save_changes = document.getElementById("profile-save")
 
-input_email = document.getElementById("profile-email")
-input_whatsapp_number = document.getElementById("profile-whatsapp-number")
-input_whatsapp_token = document.getElementById("profile-whatsapp-token")
-input_google_sheedID = document.getElementById("profile-google-sheetID")
+const input_email = document.getElementById("profile-email")
+const input_whatsapp_number = document.getElementById("profile-whatsapp-number")
+const input_whatsapp_token = document.getElementById("profile-whatsapp-token")
+const input_google_sheedID = document.getElementById("profile-google-sheetID")
 
 // TODO: Check if there is user in db
 window.onload = (event) => {
 	if (force_redirect === "1") {
+		input_email.readOnly = true;
+		input_email.style.backgroundColor = '#f0f0f0'; // light gray
+		input_email.style.border = '1px solid gray';
+		input_email.style.color = 'gray';
 		console.log("Force redirect!");
 		alert("Account was not found in DB. Please create one!");
 		input_email.value = email;
@@ -77,26 +81,52 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 		alert("Adauga valori in toate campurile!");
 		return false;
 	}
-	fetch('/profile-updates', {
-		method: 'POST',
-		headers: { 'Content-Type' : 'application/json' },
-		body: JSON.stringify({
-			choice : 1,
-			email: email.value,
-			wNumber: whatsapp_number.value,
-			wToken: whatsapp_token.value,
-			gSheetID: google_sheetID.value
+	if(force_redirect === "1") { // * Create a new account with pre-approved email
+		fetch('/profile-updates', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				choice: 2,
+				email: email.value,
+				wNumber: whatsapp_number.value,
+				wToken: whatsapp_token.value,
+				gSheetID: google_sheetID.value
+			})
 		})
-	})
-	.then(response => response.json())
-	.then(data => {
-		console.log(data, data.response)
-		if(data.response === 200) console.log("Updated account details successfully");
-		if(data.response === 500) {
-			alert("Error updating values inside db - Internal Server Error");
-			console.error("Internal server errror");
-		}
-
-	})
-	.catch(error => console.log("ERROR: ", error))
+			.then(response => {response.json(); console.log(response)})
+			.then(data => {
+				console.log(data, data.response)
+				if (data.response === 200) {
+					alert("Created account successfully");
+					console.log("Created new account successfully");
+				}
+				if (data.response === 500) {
+					alert("Error creating account inside db - Internal Server Error");
+					console.error("Internal server errror");
+				}
+			})
+			.catch(error => console.log("ERROR: ", error))
+	} else {
+		fetch('/profile-updates', {
+			method: 'POST',
+			headers: { 'Content-Type' : 'application/json' },
+			body: JSON.stringify({
+				choice : 1,
+				email: email.value,
+				wNumber: whatsapp_number.value,
+				wToken: whatsapp_token.value,
+				gSheetID: google_sheetID.value
+			})
+		})
+		.then(response => response.json())
+		.then(data => {
+			console.log(data, data.response)
+			if(data.response === 200) console.log("Updated account details successfully");
+			if(data.response === 500) {
+				alert("Error updating values inside db - Internal Server Error");
+				console.error("Internal server errror");
+			}
+		})
+		.catch(error => console.log("ERROR: ", error))
+	}
 })

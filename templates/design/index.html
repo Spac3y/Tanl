@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Line Chart</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script defer src="/static/design/javascript.js"></script>
+	<link rel="stylesheet" href="/static/design/style.css">
+</head>
+
+<body>
+	<div id="container">
+		<div id="heading">
+			<a href="/design">
+				<div id="title">💵 TANL</div>
+			</a>
+			<div id="profile-icon">
+				<a href="/profile">
+					<p>👤 ➡️</p>
+				</a>
+			</div>
+		</div>
+		<hr>
+		<div class="control-center">
+			<div class="selector-timp">
+				<button class="opt-timp active" onclick="selectTime(this, 'o-zi')">1 Zi</button>
+				<button class="opt-timp" onclick="selectTime(this, 'doua-zi')">2 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'trei-zi')">3 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'cinci-zi')">5 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'o-saptamana')">1 Săptămână</button>
+				<button class="opt-timp" onclick="selectTime(this, 'doua-saptamana')">2 Săptămâni</button>
+				<button class="opt-timp" onclick="selectTime(this, 'o-luna')">1 Lună</button>
+				<button class="opt-timp" onclick="selectTime(this, 'sase-luna')">6 Luni</button>
+				<button class="opt-timp" onclick="selectTime(this, 'an')">1 An</button>
+			</div>
+			<div class="buttons">
+				<div id="start-button">
+					<button> ▶️ </button>
+				</div>
+				<div id="stop-button">
+					<button> ⏸️ </button>
+				</div>
+			</div>
+		</div>
+		<div id="main-wrapper">
+			<div id="left">
+				<div class="content" id="live-data">
+					<div id="price-per-lead">
+						<p>Valoare / Raspuns</p>
+						<h1><span id="price-per-lead-value">0</span> RON</h1>
+						<p class="light-text"><span id="price-per-lead-procent">+0</span> change over this month</p>
+					</div>
+					<div id="responded-messages">
+						<p>Cate persoane au raspuns la mesaje</p>
+						<h1 id="responded-messages-value">0</h1>
+						<p class="light-text"><span id="seen-messages-procent">+0</span> change over this month</p>
+					</div>
+				</div>
+				<div class="content" id="graph">
+					<h2>Revenue Over Time</h2>
+					<canvas id="lineChart"></canvas>
+				</div>
+				<div class="content" id="column">
+					<h2>Monthly Revenue</h2>
+					<canvas id="barChart"></canvas>
+				</div>
+			</div>
+			<div id="right">
+				<div class="content" id="sent-messages">
+					<p>Cate mesaje au fost trimise cu succes</p>
+					<h1 id="seen-messages-value">0</h1>
+					<p class="light-text"><span id="price-per-lead-procent">+0</span> change over this month</p>
+				</div>
+				<div class="content" id="seen-messages">
+					<p>Numarul de mesaje vazute</p>
+					<h1 id="seen-messages-value">0</h1>
+					<p class="light-text"><span id="price-per-lead-procent">+0</span> change over this month</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

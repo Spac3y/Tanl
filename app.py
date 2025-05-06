@@ -14,7 +14,7 @@ import os
 import subprocess
 from time import sleep
 
-from backend import User # * My creation
+from backend import User, createAccount # * My creation
 
 # Your pre-shared token – make sure this matches the one you set in Meta dashboard
 VERIFY_TOKEN = "my_super_secret_token"
@@ -161,6 +161,22 @@ def checkAccountByEmail(email: str) -> bool:
 
 		if exists: return True
 		return False
+
+def updateMessageEvent(new_type:str, message_id: str, user_id:int) -> bool:
+	cutoff_date = (datetime.now() - timedelta(weeks=1)).strftime("%Y-%m-%d %H:%M:%S")
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("UPDATE message_events SET event_type = ? WHERE user_id = ? AND message_id = ? AND timestamp > ? ",
+			(new_type, user_id, message_id, cutoff_date))
+
+		if cursor.rowcount == 0: # * Check all messages one week old
+			cursor.execute("UPDATE message_events SET event_type = ? WHERE user_id = ? AND message_id = ?",
+			(new_type, user_id, message_id))
+			if cursor.rowcount == 0: # * Check all messages
+				return False
+			
+		conn.commit()
+		return True
 
 @app.route("/")
 def index():
@@ -329,16 +345,25 @@ def profile_updates():
 					print("Account found with email:", vEmail)
 					current_user = retUser(get_user_id_DB(vEmail))
 					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID)):
-						return jsonify({ "result" : "succes" }), 200
+						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500
 				else: # * Create new account
 					print("Account not found")
 					return jsonify({"result" : "not_found"}), 404
+				
+			elif data['choice'] == 2: # * choice = 2 -> Create a new account for accepted user
+				vEmail = data['email']
+				vWToken = data['wToken']
+				vWNumber = data['wNumber']
+				vGSheetID = data['gSheetID']
+				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail)): # * accout created in db
+					return jsonify({ "result" : "success"}), 200
+				return jsonify({ "result" : "false"}), 500
 		else:
 			return 405
 
-@app.route("/webhook", methods=['POST'])
+@app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
 	if request.method == 'GET':
 		mode = request.args.get('hub.mode')
@@ -350,13 +375,21 @@ def webhook():
 			return challenge, 200
 		else:
 			print("Webhook verification failed.")
-			return "Forbidden", 403
-	elif request.method =='POST':
+			return "Not found", 404
+
+	elif request.method == 'POST':
+		# TODO: Find the message to change status ( search max 1 week old) ignore if status from webhook is sent
 		data = request.json
-		# TODO Implement data collection and recognition idk man...
-	else:
-		return jsonify("Method not allowed"), 405
-	return 200
+		status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
+		message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
+		print(status,message_id)
+		if(updateMessageEvent(status, message_id, getUserID[1]) == True):
+			return jsonify({"status" : "success"}), 200
+		return jsonify({"error" : "Internal server error"}), 500
+
+@app.route('/design')
+def design():
+	return render_template("design/index.html")
 
 @app.errorhandler(404)
 def page_not_found(e):
