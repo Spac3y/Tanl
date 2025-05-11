@@ -1,44 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Tanl - Login</title>
+	<title>TANL - Login</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='login/style.css') }}">
-	<script src="{{ url_for('static', filename='login/javascript.js') }}"></script>
+	<script defer src="{{ url_for('static', filename='login/javascript.js') }}"></script>
 	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
 </head>
 <body>
-	<div class="main-wrapper">
-		<image id="logo" src="static/favicon.png" alt="Tanl-Icon"></image>
-		<h2>Crează un cont</h2>
-		<div id="emailLogin">
-			<input type="email">
-			<button id="emailLoginButton">Sign in with email</button>
-		</div>
-		<hr>
-		<p>or continue with</p>
-		<div id="googleLogin">
-			<a href="/login">
-				<!-- <image src="images/" alt="Google Icon"></image>
-				<button id="googleLoginButton" >Google</button> -->
-				<image id="googleLoginButton" src="/static/login/images/google-signin-assets/Web/png@1x/light/web_light_rd_SI@1x.png" alt="Google login"></image>
-			</a>
-		</div>
-		<hr>
-		<div>
-			<p>
-				By clicking continue, you agree to our 
-				<a href="/">Terms of Service</a> and 
-				<a href="/">Privacy Policy</a>
-			</p>
-		</div>
-		<hr>
-		<div class="">
-			<a href="/logout">
-				<button> Log out</button>
-			</a>
-		</div>
+	<div class="logo">
+		<img src="/static/favicon.png" alt="Logo TANL">
+		<h1 style="font-weight: normal; font-size: 24px;">TANL</h1>
+	</div>
+	
+	<h2>Crează un cont</h2>
+	
+	<input type="email" placeholder="email@domain.com" required>
+	<button class="btn btn-black">Sign in with email</button>
+	
+	<p style="margin: 10px 0; color: #777;">or continue with</p>
+	
+	<button class="btn btn-google" id="googleLogin">
+		<img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google">
+		Google
+	</button>
+	
+	<div class="terms">
+		By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
 	</div>
 </body>
 </html>
