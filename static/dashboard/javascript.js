@@ -1,4 +1,8 @@
 
+start_button = document.getElementById('start')
+stop_button = document.getElementById('stop')
+
+
 window.onload = function () {
 	console.log("window on log functino called")
 	fetch('/status', {
@@ -16,7 +20,6 @@ window.onload = function () {
 	.catch(error => console.log("ERROR: ", error))
 }
 
-start_button = document.getElementById('start')
 start_button.addEventListener("click", () => {
 	fetch('/start-stop', {
 		method: 'POST',
@@ -33,7 +36,6 @@ start_button.addEventListener("click", () => {
 	.catch(error => console.error("ERROR: ", error))
 })
 
-stop_button = document.getElementById('stop')
 stop_button.addEventListener("click", () => {
 	fetch('/start-stop', {
 		method: 'POST',
@@ -105,6 +107,6 @@ function updateEstimatedValue() {
 		// 	seen_text.textContent = (Number(quant) * Number(seen_mess));
 		// 	var resp_text = document.getElementById("respond_messages");
 		// 	resp_text.textContent = (Number(quant) * Number(resp_mess));
-		// }§
+		// }
 	}
 }

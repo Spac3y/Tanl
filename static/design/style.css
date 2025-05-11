@@ -28,12 +28,13 @@ hr {
 	align-items: center;
 }
 
-#start-button > button, #stop-button > button{
+#start > button, #stop > button{
 	height: 40px;
 	width: 40px;
 	margin-left: 10px;
 	border-radius: 8px;
-	border: 1px solid grey
+	border: 0px solid lightgrey;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 #main-wrapper {

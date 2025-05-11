@@ -28,11 +28,11 @@ def transformPhoneNumber(phoneNr):
 	phoneNumber = phoneNr[4:7]+phoneNr[8:11]+phoneNr[12:15]
 	return phoneNumber
 
-def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str) -> bool:
+def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str, price_lead) -> bool:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
-		cursor .execute("INSERT INTO users (sheet_id, whatsapp_key, whatsapp_id, email, last_row) VALUES (?,?,?,?,1)",
-		(sheet_id, whatsapp_key, whatsapp_id, email))
+		cursor .execute("INSERT INTO users (sheet_id, whatsapp_key, whatsapp_id, email, last_row, price_lead) VALUES (?,?,?,?,1,?)",
+		(sheet_id, whatsapp_key, whatsapp_id, email, price_lead))
 		conn.commit()
 		return True
 
@@ -131,10 +131,10 @@ class User:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
-	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str) -> bool:
+	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead) -> bool:
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
-			cursor.execute("UPDATE users SET email = ?, whatsapp_key = ?, whatsapp_id = ?, sheet_id = ? WHERE user_id = ?", (email, wToken, wNumber, gSheetID, self.user_id))
+			cursor.execute("UPDATE users SET email = ?, whatsapp_key = ?, whatsapp_id = ?, sheet_id = ?, price_lead = ? WHERE user_id = ?", (email, wToken, wNumber, gSheetID, price_lead, self.user_id))
 			conn.commit()
 		return True
 

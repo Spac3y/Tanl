@@ -178,8 +178,13 @@ def updateMessageEvent(new_type:str, message_id: str, user_id:int) -> bool:
 		conn.commit()
 		return True
 
-@app.route("/")
-def index():
+@app.route('/')
+def design():
+	return render_template("design/index.html")
+
+
+@app.route("/login")
+def login():
 	return render_template("login/index.html")
 
 @app.route("/logout")
@@ -190,8 +195,8 @@ def logout():
 	session.clear()
 	return redirect(url_for('index'))
 
-@app.route("/login")
-def login():
+@app.route("/google_login")
+def google_login():
 	session.clear()
 	flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
 		CLIENT_SECRETS_FILE, scopes=SCOPES
@@ -316,17 +321,17 @@ def profile_updates():
 		return 401
 	else:
 		if request.method == 'GET':
-			user = retUser(getUserID()[1])
+			user_data = retUser(getUserID()[1]).get_user_data()
 			response = {
-				"email": user.get_user_data()[4],
-				"whatsapp_number": user.get_user_data()[3],
-				"whatsapp_token": user.get_user_data()[2],
-				"google_sheetID": user.get_user_data()[1] 
+				"email": user_data[4],
+				"whatsapp_number": user_data[3],
+				"whatsapp_token": user_data[2],
+				"google_sheetID": user_data[1],
+				"price_lead": user_data[7]
 			}
 			return jsonify(response), 200
 		elif request.method == 'POST':
 			data = request.get_json()
-			# TODO: Update user data
 			if data['choice'] == 0: # * choice = 0 -> Check for email in db
 				received_data = data['email']
 				result = None
@@ -340,11 +345,12 @@ def profile_updates():
 				vWToken = data['wToken']
 				vWNumber = data['wNumber']
 				vGSheetID = data['gSheetID']
+				vPriceLead = data['price_lead']
 
 				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
 					print("Account found with email:", vEmail)
 					current_user = retUser(get_user_id_DB(vEmail))
-					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID)):
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead)):
 						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500
@@ -357,7 +363,8 @@ def profile_updates():
 				vWToken = data['wToken']
 				vWNumber = data['wNumber']
 				vGSheetID = data['gSheetID']
-				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail)): # * accout created in db
+				vPriceLead = data['price_lead']
+				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail, vPriceLead)): # * accout created in db
 					return jsonify({ "result" : "success"}), 200
 				return jsonify({ "result" : "false"}), 500
 		else:
@@ -386,10 +393,6 @@ def webhook():
 		if(updateMessageEvent(status, message_id, getUserID[1]) == True):
 			return jsonify({"status" : "success"}), 200
 		return jsonify({"error" : "Internal server error"}), 500
-
-@app.route('/design')
-def design():
-	return render_template("design/index.html")
 
 @app.errorhandler(404)
 def page_not_found(e):

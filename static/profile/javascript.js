@@ -20,7 +20,6 @@ window.onload = (event) => {
 	} else {
 		console.log("Not force redirect!");
 		vEmail =  email;
-
 		fetch('/profile-updates', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -33,13 +32,14 @@ window.onload = (event) => {
 			if(data.result === 'true') { // * The account is found in db
 				fetch('/profile-updates').then(response => response.json())
 					.then(data => {
+						// console.log(data)
 						if(data && data.email && data.whatsapp_number && data.whatsapp_token && data.google_sheetID && data.price_lead) {
 							input_email.value = data.email;
 							input_whatsapp_number.value = data.whatsapp_number;
 							input_whatsapp_token.value = data.whatsapp_token;
 							input_google_sheedID.value = data.google_sheetID;
-							// input_price_per_lead.value = data.price_lead;
-							// console.log("INSERT current user data inside input tag");
+							input_price_per_lead.value = data.price_lead;
+							console.log("INSERT current user data inside input tag");
 						} else console.log("data missing from response")
 					})
 					.catch(error => console.error("!ERROR: ", error))
