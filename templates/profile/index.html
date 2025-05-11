@@ -27,25 +27,42 @@
 		<hr>
 	<div class="main-wrapper">
 		<h1> Editare date profil</h1>
-		<form action="{{ url_for('read_sheet')}}">
-			<button type="submit">Dashboard</button>
-		</form>
-		<hr>
-		<h3>E-mail</h3>
-		<input id="profile-email" type="email">
-		<hr>
-		<h3>Whatsapp Phone Number ID</h3>
-		<input id="profile-whatsapp-number" type="text">
-		<hr>
-		<h3>Whatsapp token</h3>
-		<input id="profile-whatsapp-token" type="text">
-		<hr>
-		<h3>Google sheet ID</h3>
-		<input id="profile-google-sheetID" text="text">
-		<button id="profile-save"> Salveaza schimbarile </button>
-		<button id="profile-check-account">Verifica daca ai cont</button>
-		<p>* pentru a verifica daca ai cont introduceti emailul si apasa butonul</p>
-		<p>Account check: <p id="email-status">Not found</p></p>
+		<div class="wrapper">
+			<h3>Valoare / Raspuns</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext"> Valoarea medie a unui produs vandut</span>
+			</div>
+			<input id="profile-price-per-lead" type="number">
+		</div>
+		<div class="wrapper">
+			<h3>E-mail</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext">Introduceți o adresă de email validă</span>
+			</div>
+			<input id="profile-email" type="email">
+		</div>
+		<div class="wrapper">
+			<h3>Whatsapp Phone Number ID</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext">Phone number ID se gaseste pe pagina Meta Developers unde se acceseaza proiectul curent > Whatsapp > Api Setup > Phone Number ID copy</span>
+			</div>
+			<input id="profile-whatsapp-number" type="text">
+		</div>
+		<div class="wrapper">
+			<h3>Whatsapp token</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext">Folosind <a href="https://developers.facebook.com/blog/post/2022/12/05/auth-tokens/">acest link </a> se va creea un token permanent de autentificare</span>
+			</div>
+			<input id="profile-whatsapp-token" type="text">
+		</div>
+		<div class="wrapper bottom">
+			<h3>Google sheet ID</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext">Pentru a obtine acest ID se va intra in google sheets iar in bara de adrese se va copia valoarea ce urmeaza dupa /spreadsheet/d/  ( id-ul are exact 44 de caractere ) </span>
+			</div>
+			<input id="profile-google-sheetID" text="text">
+		</div>
+		<button id="profile-save"> Salveaza </button>
 	</div>
 </body>
 </html>

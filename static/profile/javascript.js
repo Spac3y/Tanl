@@ -1,11 +1,11 @@
 
-button_check_account = document.getElementById("profile-check-account")
 button_save_changes = document.getElementById("profile-save")
 
 const input_email = document.getElementById("profile-email")
 const input_whatsapp_number = document.getElementById("profile-whatsapp-number")
 const input_whatsapp_token = document.getElementById("profile-whatsapp-token")
 const input_google_sheedID = document.getElementById("profile-google-sheetID")
+const input_price_per_lead = document.getElementById("profile-price-per-lead")
 
 // TODO: Check if there is user in db
 window.onload = (event) => {
@@ -33,11 +33,12 @@ window.onload = (event) => {
 			if(data.result === 'true') { // * The account is found in db
 				fetch('/profile-updates').then(response => response.json())
 					.then(data => {
-						if(data && data.email && data.whatsapp_number && data.whatsapp_token && data.google_sheetID) {
+						if(data && data.email && data.whatsapp_number && data.whatsapp_token && data.google_sheetID && data.price_lead) {
 							input_email.value = data.email;
 							input_whatsapp_number.value = data.whatsapp_number;
 							input_whatsapp_token.value = data.whatsapp_token;
 							input_google_sheedID.value = data.google_sheetID;
+							// input_price_per_lead.value = data.price_lead;
 							// console.log("INSERT current user data inside input tag");
 						} else console.log("data missing from response")
 					})
@@ -48,36 +49,14 @@ window.onload = (event) => {
 	}
 }
 
-button_check_account.addEventListener("click", () => {
-	email = input_email.value;
-	fetch('/profile-updates', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			email : email,
-			choice: 0
-		})
-	}).then(response => response.json())
-	.then(data => {
-		status_indicator = document.getElementById('email-status')
-		if(data.result === "true") {
-			status_indicator.textContent = "Found";
-			status_indicator.style.color = "green";
-		} else {
-			status_indicator.textContent = "Not found";
-			status_indicator.style.color = "red";
-		}
-	})
-	.catch(error => console.error("!ERROR: ", error))
-})
-
 button_save_changes.addEventListener("click", () => { // * Update values account
 	email = input_email
 	whatsapp_number = input_whatsapp_number
 	whatsapp_token = input_whatsapp_token
 	google_sheetID = input_google_sheedID
+	price_per_lead = input_price_per_lead
 
-	if(email.value.trim() === "" || whatsapp_number.value.trim() === "" || whatsapp_token.value.trim() === "" || google_sheetID.value.trim() === "") {
+	if(email.value.trim() === "" || whatsapp_number.value.trim() === "" || whatsapp_token.value.trim() === "" || google_sheetID.value.trim() === "" || price_per_lead.value.trim() === "") {
 		alert("Adauga valori in toate campurile!");
 		return false;
 	}
@@ -90,7 +69,8 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				email: email.value,
 				wNumber: whatsapp_number.value,
 				wToken: whatsapp_token.value,
-				gSheetID: google_sheetID.value
+				gSheetID: google_sheetID.value,
+				price_lead: price_per_lead.value
 			})
 		})
 			.then(response => {response.json(); console.log(response)})
@@ -115,7 +95,8 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				email: email.value,
 				wNumber: whatsapp_number.value,
 				wToken: whatsapp_token.value,
-				gSheetID: google_sheetID.value
+				gSheetID: google_sheetID.value,
+				price_lead: price_per_lead.value
 			})
 		})
 		.then(response => response.json())

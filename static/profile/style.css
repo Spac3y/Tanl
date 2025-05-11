@@ -2,7 +2,6 @@ html,
 body {
 	height: 100vh;
 	width: 100vw;
-	/* overflow-x: hidden; */
 	font-family: Arial, sans-serif;
 }
 
@@ -17,6 +16,7 @@ hr {
 	align-items: center;
 	justify-content: space-between;
 }
+
 
 .control-center,
 .buttons {
@@ -38,13 +38,38 @@ hr {
 .main-wrapper {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	padding: 20px;
+	/* justify-content: center;
+	align-items: center; */
+}
+
+.wrapper {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: start;
+}
+
+.wrapper > h3 {
+	flex: 1;
+}
+
+.wrapper > input {
+	flex: 3;
+}
+
+.inline-wrapper {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
 	align-items: center;
 }
 
+
 input {
 	width: 40%;
-	text-align: center;
+	text-align: start;
 	margin: 0.4rem;
 	padding: 10px;
 	border: 1px solid grey;
@@ -54,4 +79,70 @@ input {
 
 button {
 	margin: 10px;
+}
+
+.bottom {
+	margin-bottom: 20px;
+}
+
+#profile-save {
+	border: 2px solid grey;
+	border-radius: 5px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+	background-color: rgb(175, 255, 175);
+	height: 30px;
+	width: 100px;
+}
+
+label {
+	font-size: 16px;
+}
+
+.tooltip {
+	position: relative;
+	display: inline-block;
+	margin-left: 8px;
+	cursor: pointer;
+	background-color: #ccc;
+	color: #000;
+	font-weight: bold;
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	text-align: center;
+	line-height: 20px;
+	font-size: 14px;
+}
+
+.tooltip .tooltiptext {
+	visibility: hidden;
+	width: 220px;
+	background-color: #333;
+	color: #fff;
+	text-align: left;
+	padding: 8px;
+	border-radius: 6px;
+	position: absolute;
+	z-index: 1;
+	bottom: 125%;
+	left: 50%;
+	transform: translateX(-50%);
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.tooltip .tooltiptext::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 6px;
+	border-style: solid;
+	border-color: #333 transparent transparent transparent;
 }
