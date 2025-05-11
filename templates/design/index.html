@@ -2,16 +2,22 @@
 <html>
 
 <head>
-	<title>Line Chart</title>
+	<title>TANL</title>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script defer src="/static/design/javascript.js"></script>
 	<link rel="stylesheet" href="/static/design/style.css">
+	<link rel="shortcut icon" href="/static/favicon.png" type="image/x-icon">
 </head>
 
 <body>
+	<script>
+		var script_status = "{{ script_st }}";
+	</script>
+
+
 	<div id="container">
 		<div id="heading">
-			<a href="/design">
+			<a href="/">
 				<div id="title">💵 TANL</div>
 			</a>
 			<div id="profile-icon">
@@ -23,15 +29,15 @@
 		<hr>
 		<div class="control-center">
 			<div class="selector-timp">
-				<button class="opt-timp active" onclick="selectTime(this, 'o-zi')">1 Zi</button>
-				<button class="opt-timp" onclick="selectTime(this, 'doua-zi')">2 Zile</button>
-				<button class="opt-timp" onclick="selectTime(this, 'trei-zi')">3 Zile</button>
-				<button class="opt-timp" onclick="selectTime(this, 'cinci-zi')">5 Zile</button>
-				<button class="opt-timp" onclick="selectTime(this, 'o-saptamana')">1 Săptămână</button>
-				<button class="opt-timp" onclick="selectTime(this, 'doua-saptamana')">2 Săptămâni</button>
-				<button class="opt-timp" onclick="selectTime(this, 'o-luna')">1 Lună</button>
-				<button class="opt-timp" onclick="selectTime(this, 'sase-luna')">6 Luni</button>
-				<button class="opt-timp" onclick="selectTime(this, 'an')">1 An</button>
+				<button class="opt-timp" onclick="selectTime(this, 'one_day')">1 Zi</button>
+				<button class="opt-timp" onclick="selectTime(this, 'two_day')">2 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'three_day')">3 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'five_day')">5 Zile</button>
+				<button class="opt-timp" onclick="selectTime(this, 'one_week')">1 Săptămână</button>
+				<button class="opt-timp" onclick="selectTime(this, 'two_week')">2 Săptămâni</button>
+				<button class="opt-timp" onclick="selectTime(this, 'one_month')">1 Lună</button>
+				<button class="opt-timp" onclick="selectTime(this, 'six_month')">6 Luni</button>
+				<button class="opt-timp active" onclick="selectTime(this, 'one_year')">1 An</button>
 			</div>
 			<div class="buttons">
 				<div id="start">
@@ -40,8 +46,8 @@
 				<div id="stop">
 					<button> ⏸️ </button>
 				</div>
+				<p id="text_status">Loading</p>
 			</div>
-			<p id="text_status">Loading</p>
 		</div>
 		<div id="main-wrapper">
 			<div id="left">
@@ -58,18 +64,18 @@
 					</div>
 				</div>
 				<div class="content" id="graph">
-					<h2>Revenue Over Time</h2>
+					<h2>Evolutie valoare / raspuns</h2>
 					<canvas id="lineChart"></canvas>
 				</div>
 				<div class="content" id="column">
-					<h2>Monthly Revenue</h2>
+					<h2>Estimat venit lunar</h2>
 					<canvas id="barChart"></canvas>
 				</div>
 			</div>
 			<div id="right">
 				<div class="content" id="sent-messages">
 					<p>Cate mesaje au fost trimise cu succes</p>
-					<h1 id="seen-messages-value">0</h1>
+					<h1 id="sent-messages-value">0</h1>
 					<p class="light-text"><span id="price-per-lead-procent">+0</span> change over this month</p>
 				</div>
 				<div class="content" id="seen-messages">

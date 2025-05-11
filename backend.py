@@ -161,6 +161,13 @@ class User:
 			
 			raise ValueError(f"Either no value was found for USER_ID: {self.user_id} OR bad value from status_script: {result}")
 
+	def getPriceLead(self) -> int:
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("SELECT price_lead FROM users WHERE user_id = ?", (self.user_id,))
+			result = cursor.fetchone()[0]
+			return result
+
 	def update_script_status(self, status):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()

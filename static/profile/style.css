@@ -9,6 +9,10 @@ hr {
 	width: 100%;
 }
 
+.clickable {
+	cursor: pointer;
+}
+
 #heading {
 	padding: 0px 10px;
 	display: flex;

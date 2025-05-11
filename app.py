@@ -52,7 +52,6 @@ def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 			""", (user_id, timestamp))
 
 			count = cursor.fetchone()[0]
-			# print(count)
 			return count
 	elif (event_type == "seen"):
 		with sqlite3.connect("database.db") as conn:
@@ -65,7 +64,6 @@ def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 			""", (user_id, timestamp))
 
 			count = cursor.fetchone()[0]
-			# print(count)
 			return count
 		
 	with sqlite3.connect("database.db") as conn:
@@ -78,26 +76,42 @@ def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 		""", (user_id, event_type, timestamp))
 
 		count = cursor.fetchone()[0]
-		# print(count)
 		return count
 
-def calculate_date_range(subtraction_value: str):
-	now = datetime.now()
-	
-	cases = {
-		"one_day": now - timedelta(days=1),
-		"two_day": now - timedelta(days=2),
-		"three_day": now - timedelta(days=3),
-		"five_day": now - timedelta(days=5),
-		"one_week": now - timedelta(weeks=1),
-		"two_week": now - timedelta(weeks=2),
-		"one_month": now - relativedelta(months=1),  # Correctly handles different month lengths
-		"six_month": now - relativedelta(months=6),  # Accounts for varying month lengths
-		"one_year": now - relativedelta(years=1)  # Correctly handles leap years
-	}
-	
-	result = cases.get(subtraction_value)
-	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
+def getEmail() -> str:
+	if 'credentials' not in session:
+		return redirect(url_for('index'))
+	credentials_info = json.loads(session['credentials'])
+	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
+
+	# * Get the users email
+	service = build('people', 'v1', credentials=credentials)
+	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+	email = profile.get('emailAddresses', [])[0].get('value')
+	return email
+
+def getUserID():
+	email =  getEmail()
+	user_id = get_user_id_DB(email)
+	if user_id is not None:
+		return [1, user_id]
+	else:
+		print(f"[{email}]User not found in DB but email is accepted | Redirect -> Create account")
+		return [-1, email]
+
+def retUser(user_id: int):
+	if user_id not in _user_cache:
+		_user_cache[user_id] = User(user_id)
+	return _user_cache[user_id]
+
+def checkAccountByEmail(email: str) -> bool:
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT 1 FROM users WHERE email = ? LIMIT 1", (email,))
+		exists = cursor.fetchone() is not None
+
+		if exists: return True
+		return False
 
 def save_credentials_to_db(user_id : int, credentials : dict):
 	with sqlite3.connect("database.db") as conn:
@@ -127,41 +141,6 @@ def refresh_credentials(user_id: int) :
 		
 	return creds
 
-def getUserID():
-	email =  getEmail()
-	user_id = get_user_id_DB(email)
-	if user_id is not None:
-		return [1, user_id]
-	else:
-		print(f"[{email}]User not found in DB but email is accepted | Redirect -> Create account")
-		return [-1, email]
-
-def getEmail() -> str:
-	if 'credentials' not in session:
-		return redirect(url_for('index'))
-	credentials_info = json.loads(session['credentials'])
-	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
-
-	# * Get the users email
-	service = build('people', 'v1', credentials=credentials)
-	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
-	email = profile.get('emailAddresses', [])[0].get('value')
-	return email
-
-def retUser(user_id: int):
-	if user_id not in _user_cache:
-		_user_cache[user_id] = User(user_id)
-	return _user_cache[user_id]
-
-def checkAccountByEmail(email: str) -> bool:
-	with sqlite3.connect("database.db") as conn:
-		cursor = conn.cursor()
-		cursor.execute("SELECT 1 FROM users WHERE email = ? LIMIT 1", (email,))
-		exists = cursor.fetchone() is not None
-
-		if exists: return True
-		return False
-
 def updateMessageEvent(new_type:str, message_id: str, user_id:int) -> bool:
 	cutoff_date = (datetime.now() - timedelta(weeks=1)).strftime("%Y-%m-%d %H:%M:%S")
 	with sqlite3.connect("database.db") as conn:
@@ -178,13 +157,80 @@ def updateMessageEvent(new_type:str, message_id: str, user_id:int) -> bool:
 		conn.commit()
 		return True
 
+def calculate_date_range(subtraction_value: str):
+	now = datetime.now()
+	
+	cases = {
+		"one_day": now - timedelta(days=1),
+		"two_day": now - timedelta(days=2),
+		"three_day": now - timedelta(days=3),
+		"five_day": now - timedelta(days=5),
+		"one_week": now - timedelta(weeks=1),
+		"two_week": now - timedelta(weeks=2),
+		"one_month": now - relativedelta(months=1),  # Correctly handles different month lengths
+		"six_month": now - relativedelta(months=6),  # Accounts for varying month lengths
+		"one_year": now - relativedelta(years=1)  # Correctly handles leap years
+	}
+	
+	result = cases.get(subtraction_value)
+	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
+
+#* Functions for chart element
+def getMonthlyValues():
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+
+		query = '''
+		WITH months(month_number, month_name) AS (
+		VALUES
+			('01', 'January'), ('02', 'February'), ('03', 'March'),
+			('04', 'April'),   ('05', 'May'),      ('06', 'June'),
+			('07', 'July'),    ('08', 'August'),   ('09', 'September'),
+			('10', 'October'), ('11', 'November'), ('12', 'December')
+		)
+		SELECT 
+		months.month_name,
+		COALESCE(count_table.count, 0) AS count
+		FROM months
+		LEFT JOIN (
+		SELECT 
+			strftime('%m', timestamp) AS month_number,
+			COUNT(*) AS count
+		FROM message_events
+		GROUP BY month_number
+		) AS count_table
+		ON months.month_number = count_table.month_number
+		ORDER BY months.month_number;
+		'''
+
+		cursor.execute(query)
+		rows = cursor.fetchall()
+		return {month: count for month, count in rows}
+
 @app.route('/')
 def design():
-	return render_template("design/index.html")
+	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+	if 'credentials' not in session:
+		return redirect(url_for('login'))
+	
+	user_id = getUserID()
 
+	if getUserID()[0] == -1:
+		return redirect(url_for('profile', force_redirect=1, email=user_id[1]))
+
+	user = retUser(user_id[1])
+	print(f"[{now}][User {user_id[1]}] Price/Lead: {user.getPriceLead()}")
+	script_status = user.get_script_status()
+	print(f"[{now}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
+
+	return render_template("design/index.html", script_st = script_status)
 
 @app.route("/login")
 def login():
+	if 'credentials' in session:
+		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+		print(f"[{now}]--- Logging user out ---")
+	session.clear()
 	return render_template("login/index.html")
 
 @app.route("/logout")
@@ -227,7 +273,7 @@ def callback():
 	# * Save credentials to DB
 	save_credentials_to_db(user_id, session['credentials'])
 
-	return redirect(url_for("read_sheet"))
+	return redirect(url_for("design"))
 
 @app.route('/submit_json', methods=['POST'])
 def submit_json():
@@ -252,11 +298,15 @@ def submit_json():
 	sent_count = get_len_message_sorted(user_id, 'sent', time_interval)
 	seen_count = get_len_message_sorted(user_id, 'seen', time_interval)
 	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
+	price_lead = retUser(getUserID()[1]).getPriceLead()
+
+	print(getMonthlyValues())
 
 	return jsonify( {
 		"sent_count" : sent_count,
 		"seen_count" : seen_count,
 		"resp_count" : resp_count,
+		"price-lead" : price_lead,
 		"message" : "Succes!"
 	})
 

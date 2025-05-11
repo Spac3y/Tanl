@@ -79,6 +79,7 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				if (data.response === 200) {
 					alert("Created account successfully");
 					console.log("Created new account successfully");
+					window.location.href = "/";
 				}
 				if (data.response === 500) {
 					alert("Error creating account inside db - Internal Server Error");
@@ -102,8 +103,11 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 		.then(response => response.json())
 		.then(data => {
 			console.log(data, data.response)
-			if(data.response === 200) console.log("Updated account details successfully");
-			if(data.response === 500) {
+			if(data.response === 200 || data['result'] === "success") {
+				console.log("Updated account details successfully");
+				window.location.href = "/";
+			}
+			if (data.response === 500 || data['result'] !== "success") {
 				alert("Error updating values inside db - Internal Server Error");
 				console.error("Internal server errror");
 			}
