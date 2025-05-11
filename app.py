@@ -180,7 +180,7 @@ def getMonthlyValues():
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
 
-		query = '''
+		query =  query = '''
 		WITH months(month_number, month_name) AS (
 		VALUES
 			('01', 'January'), ('02', 'February'), ('03', 'March'),
@@ -189,7 +189,6 @@ def getMonthlyValues():
 			('10', 'October'), ('11', 'November'), ('12', 'December')
 		)
 		SELECT 
-		months.month_name,
 		COALESCE(count_table.count, 0) AS count
 		FROM months
 		LEFT JOIN (
@@ -205,7 +204,7 @@ def getMonthlyValues():
 
 		cursor.execute(query)
 		rows = cursor.fetchall()
-		return {month: count for month, count in rows}
+		return [count for (count,) in rows]
 
 @app.route('/')
 def design():
@@ -299,15 +298,15 @@ def submit_json():
 	seen_count = get_len_message_sorted(user_id, 'seen', time_interval)
 	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
 	price_lead = retUser(getUserID()[1]).getPriceLead()
-
-	print(getMonthlyValues())
+	monthly_values = getMonthlyValues()
 
 	return jsonify( {
 		"sent_count" : sent_count,
 		"seen_count" : seen_count,
 		"resp_count" : resp_count,
 		"price-lead" : price_lead,
-		"message" : "Succes!"
+		"monthly_values" : monthly_values,
+		"result" : "succes"
 	})
 
 @app.route('/status', methods=['POST'])

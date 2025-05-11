@@ -18,13 +18,12 @@ window.onload = function () {
 	})
 		.then(response => response.json())
 		.then(data => {
-			console.log("Response from Flask:", data.status)
+			console.log("Response from Flask:", data.result)
 			document.getElementById("text_status").textContent = data.status
 			if (data.status == "Running") document.getElementById("text_status").style.color = "green"
 			else document.getElementById("text_status").style.color = "red"
 		})
 		.catch(error => console.log("ERROR: ", error))
-
 }
 
 function selectTime(btn, interval) {
@@ -61,6 +60,12 @@ function getTimeInterval(selectedInterval) {
 				resp_text.textContent = (Number(data['resp_count']));
 				var sent_text_count = document.getElementById("sent-messages-value");
 				sent_text_count.textContent = (Number(data['sent_count']));
+				for(let i = 0; i<12;i++) {
+					let value = data['monthly_values'][i] * quant;
+					console.log(value);
+					chart2.data.datasets[0].data[i] = value;
+				}
+				chart2.update();
 			}
 		})
 		.catch(error => console.error("ERROR: ", error))
@@ -144,7 +149,7 @@ const chart2 = new Chart(ctx2, {
 		labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 		datasets: [{
 			label: 'Revenue',
-			data: [55000, 62000, 58000, 57000, 80000, 67000, 72000, 63000, 59000, 48000, 12000, 0],
+			data: [0,0,0,0,0,0,0,0,0,0,0,0],
 			backgroundColor: '#c3713e',
 			borderRadius: 3, // Optional: rounded bar corners
 			barThickness: 15
@@ -159,7 +164,7 @@ const chart2 = new Chart(ctx2, {
 			y: {
 				beginAtZero: true,
 				ticks: {
-					callback: value => `$${value.toLocaleString()}`
+					callback: value => `${value.toLocaleString()}RON`
 				}
 			}
 		}
