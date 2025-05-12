@@ -6,7 +6,7 @@ stop_button = document.getElementById('stop')
 const ctx = document.getElementById('lineChart').getContext('2d');
 const ctx2 = document.getElementById('barChart').getContext('2d');
 
-const defaultTimeInterval = "one_year"
+const defaultTimeInterval = "one_day"
 
 window.onload = function () {
 	getTimeInterval(defaultTimeInterval)
@@ -29,7 +29,7 @@ window.onload = function () {
 function selectTime(btn, interval) {
 	document.querySelectorAll('.opt-timp').forEach(b => b.classList.remove('active'));
 	btn.classList.add('active');
-	getTimeInterval(interval)
+	getTimeInterval(interval);
 	console.log('Interval selectat:', interval);
 }
 
@@ -60,9 +60,21 @@ function getTimeInterval(selectedInterval) {
 				resp_text.textContent = (Number(data['resp_count']));
 				var sent_text_count = document.getElementById("sent-messages-value");
 				sent_text_count.textContent = (Number(data['sent_count']));
+				
+				// * Update first chart
+				for(let i = 0;i<10;i++) {
+					let value = data['custom_values'][i]['value'] * quant;
+					let label = data['custom_values'][i]['label'];
+
+					chart.data.datasets[0].data[i] = value;
+					chart.data.labels[i] = label;
+					
+				}
+				chart.update();
+
+				// *Update second chart
 				for(let i = 0; i<12;i++) {
 					let value = data['monthly_values'][i] * quant;
-					console.log(value);
 					chart2.data.datasets[0].data[i] = value;
 				}
 				chart2.update();
@@ -106,10 +118,10 @@ stop_button.addEventListener("click", () => {
 const chart = new Chart(ctx, {
 	type: 'line',
 	data: {
-		labels: ['23 Nov', '24', '25', '26', '27', '28', '29', '31'],
+		labels: ['20', '21', '22','23', '24', '25', '26', '27', '28', '29'],
 		datasets: [{
 			label: 'Revenue',
-			data: [23000, 25000, 30000, 35000, 37000, 41000, 39000, 47000],
+			data: [3000, 9023, 690 ,23000, 25000, 30000, 35000, 37000, 41000, 39000],
 			borderColor: '#89502d',
 			backgroundColor: 'rgba(0, 0, 0, 0.1)',
 			pointBackgroundColor: '#c3713e',
@@ -136,7 +148,7 @@ const chart = new Chart(ctx, {
 			y: {
 				beginAtZero: false,
 				ticks: {
-					callback: value => `$${value.toLocaleString()}`
+					callback: value => `${value.toLocaleString()} RON`
 				}
 			}
 		}
@@ -164,7 +176,7 @@ const chart2 = new Chart(ctx2, {
 			y: {
 				beginAtZero: true,
 				ticks: {
-					callback: value => `${value.toLocaleString()}RON`
+					callback: value => `${value.toLocaleString()} RON`
 				}
 			}
 		}

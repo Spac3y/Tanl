@@ -176,6 +176,59 @@ def calculate_date_range(subtraction_value: str):
 	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
 
 #* Functions for chart element
+def getCustomValues(interval):
+	now = datetime.now()
+	results = []
+
+	with sqlite3.connect('database.db') as conn:
+		cursor = conn.cursor()
+
+		def count_for_range(start, end):
+			cursor.execute("SELECT COUNT(*) FROM message_events WHERE timestamp BETWEEN ? AND ?",
+						(start.isoformat(), end.isoformat()))
+			return cursor.fetchone()[0] or 0
+
+		# Map intervals to number of hours
+		interval_map = {
+			'one_day': 24,
+			'two_day': 48,
+			'three_day': 72,
+			'five_day': 120,
+			'one_week': 7 * 24,
+			'two_week': 14 * 24,
+			'one_month': 30 * 24,
+			'six_month': 180 * 24,
+			'one_year': 365 * 24
+		}
+
+		if interval not in interval_map:
+			raise ValueError("Unknown interval")
+
+		total_hours = interval_map[interval]
+		bucket_count = 10  # Between 5 and 7
+		bucket_size = total_hours // bucket_count
+
+		start_time = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=total_hours)
+
+		for i in range(bucket_count):
+			bucket_start = start_time + timedelta(hours=i * bucket_size)
+			bucket_end = bucket_start + timedelta(hours=bucket_size)
+			
+			# Format label depending on the length of the bucket
+			if total_hours <= 72:
+				label = bucket_start.strftime("%d %b %H:%M")
+			elif total_hours <= 30 * 24:
+				label = bucket_start.strftime("%d %b")
+			else:
+				label = bucket_start.strftime("%b %Y")
+			
+			count = count_for_range(bucket_start, bucket_end)
+			results.append({'label': label, 'value': count})
+
+	return results
+
+
+#* Functions for chart element
 def getMonthlyValues():
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -299,6 +352,7 @@ def submit_json():
 	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
 	price_lead = retUser(getUserID()[1]).getPriceLead()
 	monthly_values = getMonthlyValues()
+	custom_values = getCustomValues(received_data)
 
 	return jsonify( {
 		"sent_count" : sent_count,
@@ -306,6 +360,7 @@ def submit_json():
 		"resp_count" : resp_count,
 		"price-lead" : price_lead,
 		"monthly_values" : monthly_values,
+		"custom_values" : custom_values,
 		"result" : "succes"
 	})
 
