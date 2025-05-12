@@ -123,12 +123,12 @@ class User:
 			cursor.execute("SELECT * FROM users WHERE user_id = ?" , (self.user_id,))
 			return cursor.fetchone()
 
-	def update_messages_table(self, message_id,event_type):
+	def update_messages_table(self, message_id, conversation_id, event_type):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("""
-				INSERT INTO message_events (user_id, message_id, event_type) VALUES (?,?,?)
-			""", (self.user_id, message_id, event_type))
+				INSERT INTO message_events (user_id, message_id,conversation_id, event_type) VALUES (?,?,?,?)
+			""", (self.user_id, message_id, conversation_id, event_type))
 			conn.commit()
 
 	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead) -> bool:
@@ -268,9 +268,10 @@ class User:
 					# print(response.text, type(response.text))
 					response_json = json.loads(response.text)
 					message_id = response_json['messages'][0]['id']
+					conversation_id = 'none'
 
 					print(message_id)
-					self.update_messages_table(str(message_id),'sent')
+					self.update_messages_table(str(message_id),str(conversation_id),'sent')
 					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 					print(f"[{now}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
 				else:

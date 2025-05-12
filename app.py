@@ -141,10 +141,18 @@ def refresh_credentials(user_id: int) :
 		
 	return creds
 
-def updateMessageEvent(new_type:str, message_id: str, user_id:int) -> bool:
+def updateMessageEvent(new_type:str, message_id: str, conversation_id:str, is_response:bool, user_id:int) -> bool:
 	cutoff_date = (datetime.now() - timedelta(weeks=1)).strftime("%Y-%m-%d %H:%M:%S")
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
+		if is_response and message_id == 'none': 
+			cursor.execute("UPDATE message_events SET event_type='responded' WHERE user_id = ?, conversation_id = ? ", (user_id, conversation_id))
+			conn.commit()
+			return True
+
+		if new_type == "sent":
+			cursor.execute("UPDATE message_events SET conversation_id = ? WHERE user_id = ? AND message_id = ? AND conversation_id = 'none' ", (conversation_id, user_id, message_id))
+
 		cursor.execute("UPDATE message_events SET event_type = ? WHERE user_id = ? AND message_id = ? AND timestamp > ? ",
 			(new_type, user_id, message_id, cutoff_date))
 
@@ -491,10 +499,19 @@ def webhook():
 	elif request.method == 'POST':
 		# TODO: Find the message to change status ( search max 1 week old) ignore if status from webhook is sent
 		data = request.json
-		status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
-		message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
-		print(status,message_id)
-		if(updateMessageEvent(status, message_id, getUserID[1]) == True):
+		conversation_id =  data['entry'][0]['id']
+		is_response = False
+
+		if 'contacts' in data['entry'][0]['changes'][0] and 'messages' in data['entry'][0]['changes'][0]:
+			is_response = True
+			message_id = 'none'
+		else:
+			status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
+			message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
+
+		print(status,message_id, is_response)
+		
+		if(updateMessageEvent(status, message_id, conversation_id, is_response,  getUserID[1]) == True):
 			return jsonify({"status" : "success"}), 200
 		return jsonify({"error" : "Internal server error"}), 500
 
