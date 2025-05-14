@@ -1,5 +1,6 @@
 
-button_save_changes = document.getElementById("profile-save")
+button_save_changes = document.getElementById("profile-save");
+button_logout = document.getElementById("logout");
 
 const input_email = document.getElementById("profile-email")
 const input_whatsapp_number = document.getElementById("profile-whatsapp-number")
@@ -114,4 +115,10 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 		})
 		.catch(error => console.log("ERROR: ", error))
 	}
+})
+
+button_logout.addEventListener('click', () => {
+	console.log("Loging out user!!!");
+	window.location.href = '/logout';
+
 })

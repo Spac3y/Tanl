@@ -299,7 +299,7 @@ def logout():
 		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 		print(f"[{now}]--- Logging user out ---")
 	session.clear()
-	return redirect(url_for('index'))
+	return redirect(url_for('design'))
 
 @app.route("/google_login")
 def google_login():

@@ -98,6 +98,15 @@ button {
 	width: 100px;
 }
 
+#logout {
+	border: 2px solid grey;
+	border-radius: 5px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+	background-color: rgb(255, 175, 175);
+	height: 30px;
+	width: 100px;
+}
+
 label {
 	font-size: 16px;
 }
@@ -149,4 +158,9 @@ label {
 	border-width: 6px;
 	border-style: solid;
 	border-color: #333 transparent transparent transparent;
+}
+
+.button-wrapper {
+	display: flex;
+	flex-direction: row;
 }
