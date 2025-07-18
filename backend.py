@@ -1,6 +1,5 @@
 
 import json
-# from oauth2client.service_account import ServiceAccountCredentials
 from requests import request
 import sqlite3
 
@@ -60,8 +59,12 @@ class User:
 			self.email = current_user[4]
 			self.last_row = current_user[6] 
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
+			# TODO: Get template name from database
+			self.template_name = current_user[7]
+			# TODO: check if the filename is correct | file is in folder
 			template_file_name = "template.json"
 			self.message_template = self.load_json(filename=template_file_name)
+			# self.message_template['template']['name'] = self.template_name
 			headers["Authorization"] = "Bearer " + self.whatsapp_token
 
 			self.is_running = self.get_script_status()

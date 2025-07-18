@@ -7,8 +7,10 @@ const input_whatsapp_number = document.getElementById("profile-whatsapp-number")
 const input_whatsapp_token = document.getElementById("profile-whatsapp-token")
 const input_google_sheedID = document.getElementById("profile-google-sheetID")
 const input_price_per_lead = document.getElementById("profile-price-per-lead")
+const input_template_name = document.getElementById("profile-template-name")
 
 // TODO: Check if there is user in db
+// TODO: Add template name input field
 window.onload = (event) => {
 	if (force_redirect === "1") {
 		input_email.readOnly = true;
@@ -40,6 +42,7 @@ window.onload = (event) => {
 							input_whatsapp_token.value = data.whatsapp_token;
 							input_google_sheedID.value = data.google_sheetID;
 							input_price_per_lead.value = data.price_lead;
+							input_template_name.value = data.template_name;
 							console.log("INSERT current user data inside input tag");
 						} else console.log("data missing from response")
 					})
@@ -56,8 +59,10 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 	whatsapp_token = input_whatsapp_token
 	google_sheetID = input_google_sheedID
 	price_per_lead = input_price_per_lead
+	template_name = input_template_name
 
-	if(email.value.trim() === "" || whatsapp_number.value.trim() === "" || whatsapp_token.value.trim() === "" || google_sheetID.value.trim() === "" || price_per_lead.value.trim() === "") {
+	if(email.value.trim() === "" || whatsapp_number.value.trim() === "" || whatsapp_token.value.trim() === "" 
+	|| google_sheetID.value.trim() === "" || price_per_lead.value.trim() === "" || template_name.value.trim() === "") {
 		alert("Adauga valori in toate campurile!");
 		return false;
 	}
@@ -71,7 +76,8 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				wNumber: whatsapp_number.value,
 				wToken: whatsapp_token.value,
 				gSheetID: google_sheetID.value,
-				price_lead: price_per_lead.value
+				price_lead: price_per_lead.value,
+				tName: template_name.value
 			})
 		})
 			.then(response => {response.json(); console.log(response)})
@@ -98,7 +104,8 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				wNumber: whatsapp_number.value,
 				wToken: whatsapp_token.value,
 				gSheetID: google_sheetID.value,
-				price_lead: price_per_lead.value
+				price_lead: price_per_lead.value,
+				tName: template_name.value
 			})
 		})
 		.then(response => response.json())
@@ -120,5 +127,4 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 button_logout.addEventListener('click', () => {
 	console.log("Loging out user!!!");
 	window.location.href = '/logout';
-
 })

@@ -6,13 +6,10 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 import json
 import sqlite3
+import os
 
 from datetime import datetime, timedelta
-from dateutil.relativedelta import	relativedelta
-
-import os
-import subprocess
-from time import sleep
+from dateutil.relativedelta import relativedelta
 
 from backend import User, createAccount # * My creation
 
@@ -235,7 +232,6 @@ def getCustomValues(interval):
 
 	return results
 
-
 #* Functions for chart element
 def getMonthlyValues():
 	with sqlite3.connect("database.db") as conn:
@@ -427,6 +423,8 @@ def profile():
 	email = request.args.get('email', default=getEmail(), type=str)
 	return render_template('profile/index.html', force_redir = force_redirect, email = email)
 
+# TODO: Add a new field: name of template message
+# TODO: Add new field for phone number column + name column
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
