@@ -28,6 +28,10 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 
 _user_cache = {}
 
+def getCurrentTime():
+	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+	return now
+
 def get_user_id_DB(email:str) -> int:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -265,7 +269,6 @@ def getMonthlyValues():
 
 @app.route('/')
 def design():
-	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	if 'credentials' not in session:
 		return redirect(url_for('login'))
 	
@@ -275,25 +278,23 @@ def design():
 		return redirect(url_for('profile', force_redirect=1, email=user_id[1]))
 
 	user = retUser(user_id[1])
-	print(f"[{now}][User {user_id[1]}] Price/Lead: {user.getPriceLead()}")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Price/Lead: {user.getPriceLead()}")
 	script_status = user.get_script_status()
-	print(f"[{now}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("design/index.html", script_st = script_status)
 
 @app.route("/login")
 def login():
 	if 'credentials' in session:
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}]--- Logging user out ---")
+		print(f"[{getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return render_template("login/index.html")
 
 @app.route("/logout")
 def logout():
 	if 'credentials' in session:
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}]--- Logging user out ---")
+		print(f"[{getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return redirect(url_for('design'))
 
@@ -385,19 +386,16 @@ def start_stop():
 
 	received_data = data['choice']
 	if received_data == '0':
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {getUserID()[1]}] Stopping script")
+		print(f"[{getCurrentTime()}][User {getUserID()[1]}] Stopping script")
 		retUser(getUserID()[1]).stop_listener()
 		return jsonify({"message" : "Stopped script"}), 200
 	
 	elif received_data == '1':
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {getUserID()[1]}] Starting script")
+		print(f"[{getCurrentTime()}][User {getUserID()[1]}] Starting script")
 		retUser(getUserID()[1]).launch_listener()
 		return jsonify({"message" : "Started script"}), 200
 	
-	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	print(f"[{now}][User {getUserID()[1]}] Error invalid value provided")
+	print(f"[{getCurrentTime()}][User {getUserID()[1]}] Error invalid value provided")
 	return jsonify({"error" : "Invalid value provided"}), 400
 
 @app.route("/user_info")
@@ -412,8 +410,7 @@ def read_sheet():
 
 	user = retUser(user_id[1])
 	script_status = user.get_script_status()
-	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	print(f"[{now}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 

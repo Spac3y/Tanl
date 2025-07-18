@@ -20,6 +20,10 @@ headers = {
 	"Authorization" : None
 }
 
+def getCurrentTime():
+	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
+	return now
+
 def transformPhoneNumber(phoneNr):
 	phoneNr = str(phoneNr)
 	if(phoneNr[0] == '7'): return phoneNr
@@ -73,18 +77,15 @@ class User:
 			raise ValueError(f"No user has been found with ID = {self.user_id}. Check if data is correct or check DB!")
 	
 	def load_json(self, filename):
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		# print(f"[{now}]OPEN FILE: {filename}")
+		# print(f"[{getCurrentTime()}]OPEN FILE: {filename}")
 		try:
 			with open(f"message_templates/{filename}", "r", encoding="utf-8") as file:
 				return json.load(file)
 		except FileNotFoundError:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-			print(f"[{now}] Error: File not found")
+			print(f"[{getCurrentTime()}] Error: File not found")
 			return None
 		except json.JSONDecodeError:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-			print(f"[{now}] Error: Invalid Json Format")
+			print(f"[{getCurrentTime()}] Error: Invalid Json Format")
 			return None
 
 	def save_credentials_to_db(self, user_id : int, credentials : dict):
@@ -116,8 +117,7 @@ class User:
 				
 			return creds
 		except Exception as e:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-			print(f"[{now}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
+			print(f"[{getCurrentTime()}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
 	
 	def get_user_data(self):
 		# TODO: Convert to fetchall() method to check for any duplicates
@@ -187,8 +187,7 @@ class User:
 		self.update_script_status("running")
 		self.thread = threading.Thread(target=self.listener, daemon=True)
 		self.thread.start()
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {self.user_id}] Script started!!!")
+		print(f"[{getCurrentTime()}][User {self.user_id}] Script started!!!")
 
 	def stop_listener(self):
 		if not self.is_running:
@@ -199,17 +198,14 @@ class User:
 		self.update_script_status("stopped")
 		self.thread.join()
 
-		now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-		print(f"[{now}][User {self.user_id}] Script stopped")
+		print(f"[{getCurrentTime()}][User {self.user_id}] Script stopped")
 
 	def listener(self):
 		try:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-
 			creds = self.refresh_credentials(self.user_id)
 			if not creds:
 				now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-				print(f"[{now}][User {self.user_id}] !!!!No creds found!!!!")
+				print(f"[{getCurrentTime()}][User {self.user_id}] !!!!No creds found!!!!")
 				return
 			
 			# try:	
@@ -221,14 +217,12 @@ class User:
 
 			while self.is_running:
 				try:
-					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-
 					sheet_range = f"{self.name_col}{self.last_row}:{self.name_col}"
 					# print("--%s--" %sheet_range)
 					name_column = self.sheet.get(sheet_range)
 
 					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
-					print(f"[{now}][User {self.user_id}] Waiting...")
+					print(f"[{getCurrentTime()}][User {self.user_id}] Waiting...")
 					if(len(name_column) >=1 and len(name_column[0]) != 0):
 						print("nameCol : ", name_column) 
 						self.sender()
@@ -238,14 +232,12 @@ class User:
 						# print("-----------------")
 					creds = self.refresh_credentials(self.user_id)
 				except Exception as e:
-					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-					print(f"[{now}][User {self.user_id}] !-! Error: {e}")
+					print(f"[{getCurrentTime()}][User {self.user_id}] !-! Error: {e}")
 					sleep(30)
 				
 				sleep(5)
 		except Exception as e:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-			print(f"[{now}][User {self.user_id}] !!! Failed to start: {e}")
+			print(f"[{getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
 		creds = self.refresh_credentials(self.user_id)
@@ -275,11 +267,9 @@ class User:
 
 					print(message_id)
 					self.update_messages_table(str(message_id),str(conversation_id),'sent')
-					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-					print(f"[{now}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
+					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
 				else:
-					now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-					print(f"[{now}][User {self.user_id}][{response.status_code}] {response.text}")
+					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] {response.text}")
 
 				# print(response.text)
 				print(response.status_code)

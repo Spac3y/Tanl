@@ -53,6 +53,7 @@ window.onload = (event) => {
 	}
 }
 
+// TODO: Redirect to homepage after updating values
 button_save_changes.addEventListener("click", () => { // * Update values account
 	email = input_email
 	whatsapp_number = input_whatsapp_number
