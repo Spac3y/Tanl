@@ -101,7 +101,7 @@ class User:
 			cursor = conn.cursor()
 			cursor.execute("SELECT credentials_json FROM users WHERE user_id = ?", (user_id, ))
 			row = cursor.fetchone()
-			if row:
+			if row[0] is not None:
 				return google.oauth2.credentials.Credentials.from_authorized_user_info(json.loads(row[0]))
 			return None
 
@@ -109,8 +109,7 @@ class User:
 		try:
 			creds = self.load_credentials_from_db(user_id)
 			if not creds:
-				raise Exception(f"No credentials found for user: {user_id}")
-			
+				raise Exception(f"No google credentials found for user: {user_id}")
 			if creds.expired and creds.refresh_token:
 				creds.refresh(Request())
 				self.save_credentials_to_db(user_id, creds)
@@ -120,18 +119,27 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
 	
 	def get_user_data(self):
-		# TODO: Convert to fetchall() method to check for any duplicates
-		with sqlite3.connect("database.db") as conn:
-			cursor = conn.cursor()
-			cursor.execute("SELECT * FROM users WHERE user_id = ?" , (self.user_id,))
-			return cursor.fetchone()
+		try:
+			with sqlite3.connect("database.db") as conn:
+				cursor = conn.cursor()
+				cursor.execute("SELECT * FROM users WHERE user_id = ?" , (self.user_id,))
+				result =  cursor.fetchall()
+
+				if len(result) > 1:
+					print(f"[{getCurrentTime()}][User {self.user_id}] More than one user found with ID: {self.user_id}. Please check database for duplicates!")
+					return None
+				
+				return result[0] if result else None
+		except json.JSONDecodeError:
+			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
+			return None
 
 	def update_messages_table(self, message_id, conversation_id, event_type):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("""
-				INSERT INTO message_events (user_id, message_id,conversation_id, event_type) VALUES (?,?,?,?)
-			""", (self.user_id, message_id, conversation_id, event_type))
+				INSERT INTO message_events (user_id, message_id, event_type) VALUES (?,?,?,?)
+			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
 	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead) -> bool:
@@ -190,9 +198,9 @@ class User:
 		print(f"[{getCurrentTime()}][User {self.user_id}] Script started!!!")
 
 	def stop_listener(self):
+		# TODO: Fix error where script is already stopped
 		if not self.is_running:
-			now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-			print(f"[{now}][User {self.user_id}] Script is already stopped")
+			print(f"[{getCurrentTime()}][User {self.user_id}] Script is already stopped")
 			return
 		self.is_running = False
 		self.update_script_status("stopped")
@@ -204,16 +212,11 @@ class User:
 		try:
 			creds = self.refresh_credentials(self.user_id)
 			if not creds:
-				now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 				print(f"[{getCurrentTime()}][User {self.user_id}] !!!!No creds found!!!!")
-				return
-			
-			# try:	
-			# * Works
+				return None
+
 			client = gspread.authorize(creds)
 			self.sheet = client.open_by_key(self.sheet_id).sheet1
-			# except Exception as e:
-			# 	print(f"[{now}][User {self.user_id}] Gspread auth error 2: {e}")
 
 			while self.is_running:
 				try:
@@ -235,7 +238,7 @@ class User:
 					print(f"[{getCurrentTime()}][User {self.user_id}] !-! Error: {e}")
 					sleep(30)
 				
-				sleep(5)
+				sleep(10)
 		except Exception as e:
 			print(f"[{getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
 	

@@ -11,10 +11,28 @@ import os
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
+# for interactive message
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+
 from backend import User, createAccount # * My creation
 
-# Your pre-shared token – make sure this matches the one you set in Meta dashboard
+# TODO: When accesing through ngrok i get uri missmatch error FIX!!!!
+
+# Whatsapp webhook verification token
 VERIFY_TOKEN = "my_super_secret_token"
+
+SENDER_EMAIL = ""
+RECEIVER_EMAIL = ""
+APP_PASSWORD = ""
+
+subject = "Client nou interesat de produs!!"
+email_message = MIMEMultipart()
+email_message['From'] = SENDER_EMAIL
+email_message['To'] = RECEIVER_EMAIL
+email_message['Subject'] = subject
 
 app = Flask(__name__)
 with open('secret_key.txt', 'r') as f:
@@ -147,12 +165,12 @@ def updateMessageEvent(new_type:str, message_id: str, conversation_id:str, is_re
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
 		if is_response and message_id == 'none': 
-			cursor.execute("UPDATE message_events SET event_type='responded' WHERE user_id = ?, conversation_id = ? ", (user_id, conversation_id))
+			cursor.execute("UPDATE message_events SET event_type='responded' WHERE user_id = ?, message_id = ? ", (user_id, conversation_id))
 			conn.commit()
 			return True
 
 		if new_type == "sent":
-			cursor.execute("UPDATE message_events SET conversation_id = ? WHERE user_id = ? AND message_id = ? AND conversation_id = 'none' ", (conversation_id, user_id, message_id))
+			cursor.execute("UPDATE message_events SET message_id = ? WHERE user_id = ? AND message_id = ? AND message_id = 'none' ", (conversation_id, user_id, message_id))
 
 		cursor.execute("UPDATE message_events SET event_type = ? WHERE user_id = ? AND message_id = ? AND timestamp > ? ",
 			(new_type, user_id, message_id, cutoff_date))
@@ -184,8 +202,8 @@ def calculate_date_range(subtraction_value: str):
 	result = cases.get(subtraction_value)
 	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
 
-#* Functions for chart element
-def getCustomValues(interval):
+#* Functions for first chart
+def getCustomValues(interval, user_id: int):
 	now = datetime.now()
 	results = []
 
@@ -193,8 +211,8 @@ def getCustomValues(interval):
 		cursor = conn.cursor()
 
 		def count_for_range(start, end):
-			cursor.execute("SELECT COUNT(*) FROM message_events WHERE timestamp BETWEEN ? AND ?",
-						(start.isoformat(), end.isoformat()))
+			cursor.execute("SELECT COUNT(*) FROM message_events WHERE timestamp BETWEEN ? AND ? AND user_id = ?",
+						(start.isoformat(), end.isoformat(), user_id))
 			return cursor.fetchone()[0] or 0
 
 		# Map intervals to number of hours
@@ -236,12 +254,11 @@ def getCustomValues(interval):
 
 	return results
 
-#* Functions for chart element
-def getMonthlyValues():
+#* Functions for second chart 
+def getMonthlyValues(user_id: int):
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
-
-		query =  query = '''
+		cursor.execute('''
 		WITH months(month_number, month_name) AS (
 		VALUES
 			('01', 'January'), ('02', 'February'), ('03', 'March'),
@@ -257,15 +274,52 @@ def getMonthlyValues():
 			strftime('%m', timestamp) AS month_number,
 			COUNT(*) AS count
 		FROM message_events
+		WHERE user_id = ?
 		GROUP BY month_number
 		) AS count_table
 		ON months.month_number = count_table.month_number
 		ORDER BY months.month_number;
-		'''
+		''', (user_id,))
 
-		cursor.execute(query)
 		rows = cursor.fetchall()
 		return [count for (count,) in rows]
+
+def handlePreconfResponse(data):
+	# * Check for preconfigured response
+	try:
+		messages = data['entry'][0]['changes'][0]['value']['messages']
+		# * Check if message is preconfigured button message
+		if not messages:
+			return "No messages", 200
+
+		msg = messages[0]
+		if msg['type'] != 'button':
+			return "Ignored: Not a button", 200
+
+		button_message = msg['button']['payload']
+		phone = msg['from']
+
+		# if button_message != "I'm interested!":
+		# 	return None
+			
+		print("------------------------")
+		print(phone, button_message, type(button_message))
+
+		# * Send email with the button message and phone number
+		try:
+			body = str(phone) + " | " + button_message
+			email_message.attach(MIMEText(body, 'plain'))
+			with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+				server.login(SENDER_EMAIL, APP_PASSWORD)
+				server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, email_message.as_string())
+				print("✅ Email sent successfully!")
+		except Exception as e:
+			print("❌ Error:", e)
+
+		return "Button processed", 200
+
+	except Exception as e:
+		return f"Error: {str(e)}", 400
 
 @app.route('/')
 def design():
@@ -282,7 +336,7 @@ def design():
 	script_status = user.get_script_status()
 	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
 
-	return render_template("design/index.html", script_st = script_status)
+	return render_template("design/index.html", script_st = script_status), 200
 
 @app.route("/login")
 def login():
@@ -356,8 +410,8 @@ def submit_json():
 	seen_count = get_len_message_sorted(user_id, 'seen', time_interval)
 	resp_count = get_len_message_sorted(user_id, 'responded', time_interval)
 	price_lead = retUser(getUserID()[1]).getPriceLead()
-	monthly_values = getMonthlyValues()
-	custom_values = getCustomValues(received_data)
+	monthly_values = getMonthlyValues(user_id)
+	custom_values = getCustomValues(received_data,user_id)
 
 	return jsonify( {
 		"sent_count" : sent_count,
@@ -379,6 +433,7 @@ def status():
 # ! - may be caused by the current error where it doesn't load properly the sheet (backend.py)
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
+	# TODO: Before updating the status, check if the script actually started...duhhhh
 	data = request.get_json()
 	print(data)
 	if not data or "choice" not in data or 'credentials' not in session:
@@ -474,8 +529,10 @@ def profile_updates():
 				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail, vPriceLead)): # * accout created in db
 					return jsonify({ "result" : "success"}), 200
 				return jsonify({ "result" : "false"}), 500
+
+			handlePreconfReponse()
 		else:
-			return 405
+			return "Method not allowed",405
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -503,8 +560,6 @@ def webhook():
 		else:
 			status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
 			message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
-
-		print(status,message_id, is_response)
 		
 		if(updateMessageEvent(status, message_id, conversation_id, is_response,  getUserID[1]) == True):
 			return jsonify({"status" : "success"}), 200
