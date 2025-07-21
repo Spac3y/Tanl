@@ -16,9 +16,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-
 from backend import User, createAccount # * My creation
 
+# TODO: Problem when using the same port whatsapp wehbhook will send all data from all clients to same link
+# Filter data by user_id or by email
+
+# TODO: Implement unit tests
+# * 1. Send messages
+# * 2. Whatsapp webhook verification
+# * 3. Connection to google sheets
+# * 4. Get user data from database
 # TODO: When accesing through ngrok i get uri missmatch error FIX!!!!
 
 # Whatsapp webhook verification token

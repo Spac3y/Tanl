@@ -170,7 +170,6 @@ def main():
 			x += 1
 			listener()
 			time.sleep(2)
-			# TODO: After 21600 sessions send the log through discord to custom server
 			if x == 21600: 
 			# if x == 10: # For testing
 				x = 0

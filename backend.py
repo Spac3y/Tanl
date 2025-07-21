@@ -20,6 +20,46 @@ headers = {
 	"Authorization" : None
 }
 
+MESSAGES_PER_DAY_LIMIT = 100
+
+def updateMessageCount():
+	try:
+		# Open the JSON file and load its content
+		with open('message_limit.json', 'r') as file:
+			data = json.load(file)
+		
+		# Get today's date
+		today = date.today().isoformat()
+		
+		count = data['count']
+
+		# Check if the date matches today's date
+		if data['date'] == today:
+			# Increment the count
+			data['count'] = count+1
+		else:
+			# Reset the count and update the date
+			data['count'] = 1
+			data['date'] = today
+		
+		# Write the updated data back to the file
+		with open('message_limit.json', 'w') as file:
+			json.dump(data, file, indent=4)
+
+	except FileNotFoundError:
+		# If the file doesn't exist, create it with initial values
+		with open('message_limit.json', 'w') as file:
+			json.dump({'date': date.today().isoformat(), 'count': 1}, file, indent=4)
+
+def compareMessageCount():
+	with open('message_limit.json', 'r') as file:
+		data = json.load(file)
+		count = data['count']
+		if count < MESSAGES_PER_DAY_LIMIT:
+			return True
+		else:
+			return False
+
 def getCurrentTime():
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
@@ -48,12 +88,8 @@ class User:
 		self.phone_col = 'D'
 
 		self.user_id = user_id
-
 		self.thread = None
-
-
 		current_user = self.get_user_data()
-		# print(current_user, type(current_user))
 
 		if current_user !=None:
 			# * Get all data based on user_id
@@ -149,7 +185,6 @@ class User:
 			conn.commit()
 		return True
 
-
 	def update_last_line(self, last_row):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -243,6 +278,12 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
+		# TODO: Make this option to be set in profile page
+		if compareMessageCount() == False:
+			print(f"[{getCurrentTime()}] Message limit reached: {count} messages sent today.")
+			self.stop_listener()
+			return None
+
 		creds = self.refresh_credentials(self.user_id)
 
 		client = gspread.authorize(creds)
@@ -250,31 +291,24 @@ class User:
 
 		name_col = self.sheet.get(f'{self.name_col}{self.last_row}:{self.name_col}')
 		if(len(name_col) >=1 and len(name_col[0]) != 0):
-			# print("nameCol : ", name_col) 
 			phoneNr_col = self.sheet.get(f'{self.phone_col}{self.last_row}:{self.phone_col}', value_render_option='FORMULA')
-
-			print(phoneNr_col)
 
 			for i in range(len(name_col)): # Go through every user and send them a custom message
 				print("index : ", i)
 				self.message_template['to'] = '40' + transformPhoneNumber(phoneNr_col[i][0])
 				self.message_template['template']['components'][0]['parameters'][0]['text'] = name_col[i][0]
-				# print(f"{template['to']} -> {template['template']['components'][0]['parameters'][0]['text']}") # Actual live data taken from sheets
 				response = request("POST", self.url, data=json.dumps(self.message_template), headers=headers)
 
 				if(response.status_code == 200):
-					# print(response.text, type(response.text))
 					response_json = json.loads(response.text)
 					message_id = response_json['messages'][0]['id']
 					conversation_id = 'none'
 
-					print(message_id)
 					self.update_messages_table(str(message_id),str(conversation_id),'sent')
 					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
 				else:
 					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] {response.text}")
 
-				# print(response.text)
 				print(response.status_code)
 			new_last_line = self.last_row + len(name_col)
 			self.last_row = new_last_line
