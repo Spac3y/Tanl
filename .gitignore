@@ -10,4 +10,4 @@ __pycache__/
 *database*
 message_templates/*
 temp/
-init/
+init/insert_test_data.py
