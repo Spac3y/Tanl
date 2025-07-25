@@ -10,7 +10,6 @@ const input_price_per_lead = document.getElementById("profile-price-per-lead")
 const input_template_name = document.getElementById("profile-template-name")
 
 // TODO: Check if there is user in db
-// TODO: Add template name input field
 window.onload = (event) => {
 	if (force_redirect === "1") {
 		input_email.readOnly = true;
@@ -53,7 +52,6 @@ window.onload = (event) => {
 	}
 }
 
-// TODO: Redirect to homepage after updating values
 button_save_changes.addEventListener("click", () => { // * Update values account
 	email = input_email
 	whatsapp_number = input_whatsapp_number

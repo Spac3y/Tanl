@@ -14,7 +14,7 @@ def initializeUserDB():
 				credentials_json TEXT,
 				last_row INTEGER NOT NULL,
 				price_lead INTEGER NOT NULL DEFAULT 0,
-				template_name TEXT DEFAULT 'default' NOT NULL
+				template_name TEXT DEFAULT 'hello_world' NOT NULL
 				);
 	""")
 	conn.commit()

@@ -110,11 +110,15 @@ def getEmail() -> str:
 	credentials_info = json.loads(session['credentials'])
 	credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(info=credentials_info)
 
-	# * Get the users email
-	service = build('people', 'v1', credentials=credentials)
-	profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
-	email = profile.get('emailAddresses', [])[0].get('value')
-	return email
+	try:
+		# * Get the users email
+		service = build('people', 'v1', credentials=credentials)
+		profile = service.people().get(resourceName='people/me', personFields='emailAddresses').execute()
+		email = profile.get('emailAddresses', [])[0].get('value')
+		return email
+	except google.auth.exceptions.RefreshError as e:
+		print(f"[{getCurrentTime()}] Error refreshing credentials: {e}")
+		return redirect(url_for('login'))
 
 def getUserID():
 	email =  getEmail()
@@ -341,7 +345,7 @@ def design():
 	user = retUser(user_id[1])
 	print(f"[{getCurrentTime()}][User {user_id[1]}] Price/Lead: {user.getPriceLead()}")
 	script_status = user.get_script_status()
-	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("design/index.html", script_st = script_status), 200
 
@@ -482,7 +486,6 @@ def profile():
 	email = request.args.get('email', default=getEmail(), type=str)
 	return render_template('profile/index.html', force_redir = force_redirect, email = email)
 
-# TODO: Add a new field: name of template message
 # TODO: Add new field for phone number column + name column
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
@@ -496,7 +499,8 @@ def profile_updates():
 				"whatsapp_number": user_data[3],
 				"whatsapp_token": user_data[2],
 				"google_sheetID": user_data[1],
-				"price_lead": user_data[7]
+				"price_lead": user_data[7],
+				"template_name" : user_data[8]
 			}
 			return jsonify(response), 200
 		elif request.method == 'POST':
@@ -515,11 +519,12 @@ def profile_updates():
 				vWNumber = data['wNumber']
 				vGSheetID = data['gSheetID']
 				vPriceLead = data['price_lead']
+				vTemplateName = data['tName']
 
 				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
-					print("Account found with email:", vEmail)
 					current_user = retUser(get_user_id_DB(vEmail))
-					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead)):
+					# * UPDATE HERE FOR TEMPLATE NAME
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName)):
 						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500
@@ -578,5 +583,5 @@ def page_not_found(e):
 
 if __name__ == "__main__":
 	# app.run(debug=True)  # Enables HTTPS for local testing
-	app.run(port=5100,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
+	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
 	
