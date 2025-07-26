@@ -8,7 +8,6 @@
 	<script defer src="{{ url_for('static', filename='profile/javascript.js') }}"></script>
 	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
 </head>
-<!-- TODO: Add input field for phone number column + name column -->
 <body>
 	<script>
 		var force_redirect = "{{ force_redir }}";
@@ -33,42 +32,52 @@
 			<div class="tooltip">?
 				<span class="tooltiptext"> Valoarea medie a unui produs vandut</span>
 			</div>
-			<input id="profile-price-per-lead" type="number">
+			<input id="profile-price-per-lead" type="number" placeholder="100">
 		</div>
 		<div class="wrapper">
 			<h3>Nume mesaj template</h3>
 			<div class="tooltip">?
 				<span class="tooltiptext"> Acesta reprezinta numele template-ului pentru mesajele automate. Se editeaza din panoul meta</span>
 			</div>
-			<input id="profile-template-name" type="text">
+			<input id="profile-template-name" type="text" placeholder="Nume template">
+		</div>
+		<div class="wrapper">
+			<h3>Coloane pentru nume si numar de telefon</h3>
+			<div class="tooltip">?
+				<span class="tooltiptext"> Acesta valori corespund cu coloanele din google sheets unde sunt primite numele clientelor respectiv numerele lor de telefon</span>
+			</div>
+			<div class="double-input">
+				<input id="profile-column-name" type="text" placeholder="Nume client">
+				<input id="profile-column-phone" type="text" placeholder="Numar telefon client">
+			</div>
 		</div>
 		<div class="wrapper">
 			<h3>E-mail</h3>
 			<div class="tooltip">?
 				<span class="tooltiptext">Introduceți o adresă de email validă</span>
 			</div>
-			<input id="profile-email" type="email">
+			<input id="profile-email" type="email" placeholder="name@email.com">
 		</div>
 		<div class="wrapper">
 			<h3>Whatsapp Phone Number ID</h3>
 			<div class="tooltip">?
 				<span class="tooltiptext">Phone number ID se gaseste pe pagina Meta Developers unde se acceseaza proiectul curent > Whatsapp > Api Setup > Phone Number ID copy</span>
 			</div>
-			<input id="profile-whatsapp-number" type="text">
+			<input id="profile-whatsapp-number" type="text" placeholder="123456789012345">
 		</div>
 		<div class="wrapper">
 			<h3>Whatsapp token</h3>
 			<div class="tooltip">?
 				<span class="tooltiptext">Folosind <a href="https://developers.facebook.com/blog/post/2022/12/05/auth-tokens/">acest link </a> se va creea un token permanent de autentificare</span>
 			</div>
-			<input id="profile-whatsapp-token" type="text">
+			<input id="profile-whatsapp-token" type="text" placeholder="EAAP0592390420...">
 		</div>
 		<div class="wrapper bottom">
 			<h3>Google sheet ID</h3>
 			<div class="tooltip">?
 				<span class="tooltiptext">Pentru a obtine acest ID se va intra in google sheets iar in bara de adrese se va copia valoarea ce urmeaza dupa /spreadsheet/d/  ( id-ul are exact 44 de caractere ) </span>
 			</div>
-			<input id="profile-google-sheetID" text="text">
+			<input id="profile-google-sheetID" text="text" placeholder="google sheets id">
 		</div>
 		<div class="button-wrapper">
 			<button class="clickable" id="profile-save"> Salveaza </button>

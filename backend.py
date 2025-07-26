@@ -71,10 +71,10 @@ def transformPhoneNumber(phoneNr):
 	phoneNumber = phoneNr[4:7]+phoneNr[8:11]+phoneNr[12:15]
 	return phoneNumber
 
-def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str, price_lead) -> bool:
+def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str, price_lead:int, template_name: str, column_name:str, column_phone:str ) -> bool:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
-		cursor .execute("INSERT INTO users (sheet_id, whatsapp_key, whatsapp_id, email, last_row, price_lead) VALUES (?,?,?,?,1,?)",
+		cursor .execute("INSERT INTO users (sheet_id, whatsapp_key, whatsapp_id, email, last_row, price_lead, template_name, column_name, column_phone) VALUES (?,?,?,?,1,?,?,?,?)",
 		(sheet_id, whatsapp_key, whatsapp_id, email, price_lead))
 		conn.commit()
 		return True
@@ -82,16 +82,13 @@ def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str,
 class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
+	# TODO: After modifying the database, change the constructor to read new data
 	def __init__(self, user_id:int):
-		# TODO: Set these variables to be edited in profile page
-		self.name_col = 'C'
-		self.phone_col = 'D'
-
 		self.user_id = user_id
 		self.thread = None
 		current_user = self.get_user_data()
 
-		if current_user !=None:
+		if current_user != None:
 			# * Get all data based on user_id
 			self.sheet_id = current_user[1]
 			self.whatsapp_token = current_user[2]
@@ -99,6 +96,8 @@ class User:
 			self.email = current_user[4]
 			self.last_row = current_user[6] 
 			self.template_name = current_user[8]
+			self.name_col = current_user[9]
+			self.phone_col = current_user[10]
 
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
 			
@@ -179,10 +178,13 @@ class User:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
-	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead, template_name: str) -> bool:
+	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead: int, template_name: str, name_col: str, phone_col: str) -> bool:
+		name_col = name_col.upper()
+		phone_col = phone_col.upper()
+
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
-			cursor.execute("UPDATE users SET email = ?, whatsapp_key = ?, whatsapp_id = ?, sheet_id = ?, price_lead = ?, template_name = ? WHERE user_id = ?", (email, wToken, wNumber, gSheetID, price_lead, template_name, self.user_id))
+			cursor.execute("UPDATE users SET email = ?, whatsapp_key = ?, whatsapp_id = ?, sheet_id = ?, price_lead = ?, template_name = ?, column_name = ?, column_phone = ? WHERE user_id = ?", (email, wToken, wNumber, gSheetID, price_lead, template_name,name_col, phone_col, self.user_id))
 			conn.commit()
 		return True
 
@@ -231,9 +233,11 @@ class User:
 		self.update_script_status("running")
 		self.thread = threading.Thread(target=self.listener, daemon=True)
 		self.thread.start()
-		print(f"[{getCurrentTime()}][User {self.user_id}] Script started!!!")
+		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread}")
+		print(f"[{getCurrentTime()}][User {self.user_id}] Started script")
 
 	def stop_listener(self):
+		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread}")
 		# TODO: Fix error where script is already stopped
 		if not self.is_running:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Script is already stopped")

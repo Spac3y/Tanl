@@ -343,7 +343,6 @@ def design():
 		return redirect(url_for('profile', force_redirect=1, email=user_id[1]))
 
 	user = retUser(user_id[1])
-	print(f"[{getCurrentTime()}][User {user_id[1]}] Price/Lead: {user.getPriceLead()}")
 	script_status = user.get_script_status()
 	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 
@@ -440,19 +439,15 @@ def status():
 	value = "Running" if ps == True else "Stopped"
 	return jsonify({'status' : value })
 
-# ! When pressing the stop button it takes a lot of time to process 
-# ! - may be caused by the current error where it doesn't load properly the sheet (backend.py)
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
 	# TODO: Before updating the status, check if the script actually started...duhhhh
 	data = request.get_json()
-	print(data)
 	if not data or "choice" not in data or 'credentials' not in session:
 		return jsonify({"error" : "Invalid request"}), 400
 
 	received_data = data['choice']
 	if received_data == '0':
-		print(f"[{getCurrentTime()}][User {getUserID()[1]}] Stopping script")
 		retUser(getUserID()[1]).stop_listener()
 		return jsonify({"message" : "Stopped script"}), 200
 	
@@ -486,7 +481,6 @@ def profile():
 	email = request.args.get('email', default=getEmail(), type=str)
 	return render_template('profile/index.html', force_redir = force_redirect, email = email)
 
-# TODO: Add new field for phone number column + name column
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
@@ -500,7 +494,9 @@ def profile_updates():
 				"whatsapp_token": user_data[2],
 				"google_sheetID": user_data[1],
 				"price_lead": user_data[7],
-				"template_name" : user_data[8]
+				"template_name" : user_data[8],
+				"column_name" : user_data[9],
+				"column_phone" : user_data[10]
 			}
 			return jsonify(response), 200
 		elif request.method == 'POST':
@@ -520,11 +516,13 @@ def profile_updates():
 				vGSheetID = data['gSheetID']
 				vPriceLead = data['price_lead']
 				vTemplateName = data['tName']
+				vNameCol = data['cName']
+				vPhoneCol = data['cPhone']
 
 				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
 					current_user = retUser(get_user_id_DB(vEmail))
 					# * UPDATE HERE FOR TEMPLATE NAME
-					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName)):
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName, vNameCol, vPhoneCol)):
 						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500
@@ -538,6 +536,9 @@ def profile_updates():
 				vWNumber = data['wNumber']
 				vGSheetID = data['gSheetID']
 				vPriceLead = data['price_lead']
+				vTemplateName = data['tName']
+				vNameCol = data['cName']
+				vPhoneCol = data['cPhone']
 				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail, vPriceLead)): # * accout created in db
 					return jsonify({ "result" : "success"}), 200
 				return jsonify({ "result" : "false"}), 500
@@ -582,6 +583,5 @@ def page_not_found(e):
 	return render_template('404/index.html'), 404
 
 if __name__ == "__main__":
-	# app.run(debug=True)  # Enables HTTPS for local testing
 	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
 	

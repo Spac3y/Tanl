@@ -9,6 +9,9 @@ const input_google_sheedID = document.getElementById("profile-google-sheetID")
 const input_price_per_lead = document.getElementById("profile-price-per-lead")
 const input_template_name = document.getElementById("profile-template-name")
 
+const input_column_name = document.getElementById("profile-column-name")
+const input_column_phone = document.getElementById("profile-column-phone")
+
 // TODO: Check if there is user in db
 window.onload = (event) => {
 	if (force_redirect === "1") {
@@ -19,7 +22,8 @@ window.onload = (event) => {
 		console.log("Force redirect!");
 		alert("Account was not found in DB. Please create one!");
 		input_email.value = email;
-	} else {
+	}
+	 else {
 		console.log("Not force redirect!");
 		vEmail =  email;
 		fetch('/profile-updates', {
@@ -34,7 +38,6 @@ window.onload = (event) => {
 			if(data.result === 'true') { // * The account is found in db
 				fetch('/profile-updates').then(response => response.json())
 					.then(data => {
-						// console.log(data)
 						if(data && data.email && data.whatsapp_number && data.whatsapp_token && data.google_sheetID && data.price_lead) {
 							input_email.value = data.email;
 							input_whatsapp_number.value = data.whatsapp_number;
@@ -42,6 +45,8 @@ window.onload = (event) => {
 							input_google_sheedID.value = data.google_sheetID;
 							input_price_per_lead.value = data.price_lead;
 							input_template_name.value = data.template_name;
+							input_column_name.value = data.column_name;
+							input_column_phone.value = data.column_phone;
 							console.log("INSERT current user data inside input tag");
 						} else console.log("data missing from response")
 					})
@@ -59,9 +64,11 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 	google_sheetID = input_google_sheedID
 	price_per_lead = input_price_per_lead
 	template_name = input_template_name
+	column_name = input_column_name
+	column_phone = input_column_phone
 
 	if(email.value.trim() === "" || whatsapp_number.value.trim() === "" || whatsapp_token.value.trim() === "" 
-	|| google_sheetID.value.trim() === "" || price_per_lead.value.trim() === "" || template_name.value.trim() === "") {
+	|| google_sheetID.value.trim() === "" || price_per_lead.value.trim() === "" || template_name.value.trim() === "" || column_name.value.trim() === "" || column_phone.value.trim() === "") {
 		alert("Adauga valori in toate campurile!");
 		return false;
 	}
@@ -76,7 +83,9 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				wToken: whatsapp_token.value,
 				gSheetID: google_sheetID.value,
 				price_lead: price_per_lead.value,
-				tName: template_name.value
+				tName: template_name.value,
+				cName: column_name.value,
+				cPhone: column_phone.value
 			})
 		})
 			.then(response => {response.json(); console.log(response)})
@@ -104,7 +113,9 @@ button_save_changes.addEventListener("click", () => { // * Update values account
 				wToken: whatsapp_token.value,
 				gSheetID: google_sheetID.value,
 				price_lead: price_per_lead.value,
-				tName: template_name.value
+				tName: template_name.value,
+				cName: column_name.value,
+				cPhone: column_phone.value
 			})
 		})
 		.then(response => response.json())

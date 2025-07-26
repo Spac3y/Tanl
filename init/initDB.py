@@ -14,7 +14,9 @@ def initializeUserDB():
 				credentials_json TEXT,
 				last_row INTEGER NOT NULL,
 				price_lead INTEGER NOT NULL DEFAULT 0,
-				template_name TEXT DEFAULT 'hello_world' NOT NULL
+				template_name TEXT DEFAULT 'hello_world' NOT NULL,
+				column_name TEXT DEFAULT 'A' NOT NULL,
+				column_phone TEXT DEFAULT 'B' NOT NULL
 				);
 	""")
 	conn.commit()
@@ -63,27 +65,8 @@ def labamea():
 		cursor = conn.cursor()
 		cursor.execute("UPDATE script_status SET timestamp = CURRENT_TIMESTAMP WHERE timestamp IS NULL")
 
-def createnewtable():
+def delete_script_status(user_id):
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
-		cursor.execute("ALTER TABLE users RENAME TO users_old;")
-		cursor.execute("""
-		CREATE TABLE IF NOT EXISTS users (
-				user_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				sheet_id TEXT NOT NULL UNIQUE,
-				whatsapp_key TEXT NOT NULL,
-				whatsapp_id TEXT NOT NULL,
-				email TEXT NOT NULL UNIQUE,
-				credentials_json TEXT,
-				last_row INTEGER NOT NULL
-				);
-		""") 
-		cursor.execute("INSERT INTO users (user_id, sheet_id, whatsapp_key, whatsapp_id, email, credentials_json, last_row) SELECT user_id, sheet_id, whatsapp_key, whatsapp_id, email, credentials_json, last_row FROM users_old;")
-		cursor.execute("DROP TABLE users_old")
-# createnewtable()
-
-def delete_script_status():
-	with sqlite3.connect("database.db") as conn:
-		cursor = conn.cursor()
-		cursor.execute("DELETE FROM script_status WHERE user_id = 2")
+		cursor.execute("DELETE FROM script_status WHERE user_id = ?", (user_id,))
 		conn.commit()
