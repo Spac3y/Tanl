@@ -94,7 +94,6 @@ hr {
 	align-items: center;
 }
 
-
 input {
 	width: 40%;
 	text-align: start;
@@ -108,6 +107,8 @@ input {
 button {
 	margin: 10px;
 }
+
+
 
 .bottom {
 	margin-bottom: 20px;
@@ -137,18 +138,15 @@ label {
 
 .tooltip {
 	position: relative;
-	display: inline-block;
-	margin-left: 8px;
-	cursor: pointer;
-	background-color: #ccc;
-	color: #000;
-	font-weight: bold;
-	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 20px;
 	height: 20px;
-	text-align: center;
-	line-height: 20px;
-	font-size: 14px;
+	cursor: pointer;
+	border: 1px solid grey;
+	border-radius: 50%;
+	background-color: #999999;
 }
 
 .tooltip .tooltiptext {
@@ -187,4 +185,18 @@ label {
 .button-wrapper {
 	display: flex;
 	flex-direction: row;
+}
+
+.tooltip input[type="checkbox"] {
+	appearance: none;
+	width: 100%;
+	height: 100%;
+	border: 1px solid grey;
+	border-radius: 4px;
+	background-color: #ff5757;
+	cursor: pointer;
+}
+
+.tooltip input[type="checkbox"]:checked {
+	background-color: #84ff57;
 }
