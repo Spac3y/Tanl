@@ -50,7 +50,7 @@ def initializeStatusDB():
 		);
 		""")
 		conn.commit()
-	
+
 def initializeMessageLimitDB():
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -59,6 +59,8 @@ def initializeMessageLimitDB():
 			user_id INTEGER PRIMARY KEY,
 			is_on BOOLEAN NOT NULL DEFAULT 0,
 			limit_value INTEGER NOT NULL DEFAULT 1000,
+			current_value INTEGER NOT NULL DEFAULT 0;
+			last_day DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 			);
 		""")

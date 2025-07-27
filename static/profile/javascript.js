@@ -1,4 +1,9 @@
 
+document.getElementById('limit-enabled').addEventListener('change', function() {
+	document.getElementById('limit-value').disabled = !this.checked;
+});
+
+
 button_save_changes = document.getElementById("profile-save");
 button_logout = document.getElementById("logout");
 
