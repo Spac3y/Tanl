@@ -18,6 +18,8 @@ from email.mime.multipart import MIMEMultipart
 
 from backend import User, createAccount # * My creation
 
+# TODO: Implement message limit in profile page
+
 # TODO: Problem when using the same port whatsapp wehbhook will send all data from all clients to same link
 # Filter data by user_id or by email
 
@@ -294,7 +296,7 @@ def getMonthlyValues(user_id: int):
 
 		rows = cursor.fetchall()
 		return [count for (count,) in rows]
-
+		
 def handlePreconfResponse(data):
 	# * Check for preconfigured response
 	try:

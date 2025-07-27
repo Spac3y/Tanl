@@ -20,46 +20,6 @@ headers = {
 	"Authorization" : None
 }
 
-MESSAGES_PER_DAY_LIMIT = 100
-
-def updateMessageCount():
-	try:
-		# Open the JSON file and load its content
-		with open('message_limit.json', 'r') as file:
-			data = json.load(file)
-		
-		# Get today's date
-		today = date.today().isoformat()
-		
-		count = data['count']
-
-		# Check if the date matches today's date
-		if data['date'] == today:
-			# Increment the count
-			data['count'] = count+1
-		else:
-			# Reset the count and update the date
-			data['count'] = 1
-			data['date'] = today
-		
-		# Write the updated data back to the file
-		with open('message_limit.json', 'w') as file:
-			json.dump(data, file, indent=4)
-
-	except FileNotFoundError:
-		# If the file doesn't exist, create it with initial values
-		with open('message_limit.json', 'w') as file:
-			json.dump({'date': date.today().isoformat(), 'count': 1}, file, indent=4)
-
-def compareMessageCount():
-	with open('message_limit.json', 'r') as file:
-		data = json.load(file)
-		count = data['count']
-		if count < MESSAGES_PER_DAY_LIMIT:
-			return True
-		else:
-			return False
-
 def getCurrentTime():
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
@@ -169,6 +129,24 @@ class User:
 		except json.JSONDecodeError:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
+
+# TODO: create update function for message limits
+# TODO: create getter function for message limits
+# TODO: Implement update message_limit in profile page
+# TODO: When using sender() function, check the message limit
+# TODO: Add new fields for message limits in database: current_count, date
+
+	def update_message_limits(self, is_on: bool, value: int):
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor
+			cursor.execute("""
+			INSERT INTO message_limit (user_id, is_on, limit_value)
+			VALUES (?, ?, ?)
+			ON CONFLICT(user_id) DO UPDATE SET
+				is_on = excluded.is_on,
+				limit_value = excluded.limit_value;
+			""", (self.user_id, is_on, value))
+			conn.commit()
 
 	def update_messages_table(self, message_id, conversation_id, event_type):
 		with sqlite3.connect("database.db") as conn:
@@ -318,4 +296,3 @@ class User:
 			new_last_line = self.last_row + len(name_col)
 			self.last_row = new_last_line
 			self.update_last_line(new_last_line)
-
