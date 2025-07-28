@@ -42,7 +42,6 @@ def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str,
 class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
-	# TODO: After modifying the database, change the constructor to read new data
 	# TODO: Implement a caching system for user data to avoid multiple DB calls
 	def __init__(self, user_id:int):
 		self.user_id = user_id
@@ -50,34 +49,36 @@ class User:
 		current_user = self.get_user_data()
 
 		if current_user != None:
-			# * Get all data based on user_id
-			self.sheet_id = current_user[1]
-			self.whatsapp_token = current_user[2]
-			self.whatsapp_id = current_user[3]
-			self.email = current_user[4]
-			self.last_row = current_user[6] 
-			self.template_name = current_user[8]
-			self.name_col = current_user[9]
-			self.phone_col = current_user[10]
-
-			message_limit = self.get_message_limit()
-			self.message_limit_enabled = message_limit[1]
-			self.message_limit_value = message_limit[2]
-
-			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
-			
-			# TODO: check if the filename is correct | file is in folder
-
-			template_file_name = "template.json"
-			self.message_template = self.load_json(filename=template_file_name)
-			self.message_template['template']['name'] = self.template_name
-			headers["Authorization"] = "Bearer " + self.whatsapp_token
-
-			self.is_running = self.get_script_status()
-
+			self.refresh()
 		else:
 			raise ValueError(f"No user has been found with ID = {self.user_id}. Check if data is correct or check DB!")
 	
+	def refresh(self):
+		current_user = self.get_user_data()
+
+		self.sheet_id = current_user[1]
+		self.whatsapp_token = current_user[2]
+		self.whatsapp_id = current_user[3]
+		self.email = current_user[4]
+		self.last_row = current_user[6] 
+		self.template_name = current_user[8]
+		self.name_col = current_user[9]
+		self.phone_col = current_user[10]
+
+		message_limit = self.get_message_limit()
+		self.message_limit_enabled = message_limit[1]
+		self.message_limit_value = message_limit[2]
+
+		self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
+
+		# TODO: check if the filename is correct | file is in folder
+		template_file_name = "template.json"
+		self.message_template = self.load_json(filename=template_file_name)
+		self.message_template['template']['name'] = self.template_name
+		headers["Authorization"] = "Bearer " + self.whatsapp_token
+
+		self.is_running = self.get_script_status()
+
 	def load_json(self, filename):
 		# print(f"[{getCurrentTime()}]OPEN FILE: {filename}")
 		try:
@@ -166,7 +167,7 @@ class User:
 			conn.commit()
 		print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
 
-	def update_message_current_count(self):
+	def update_message_limit_current_count(self):
 		try:
 			with sqlite3.connect("database.db") as conn:
 				cursor = conn.cursor()
@@ -179,7 +180,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
 			return False
 
-	def update_message_limits(self, is_on: bool, value: int):
+	def update_message_limit(self, is_on: bool, value: int):
 		try:
 			with sqlite3.connect("database.db") as conn:
 				cursor = conn.cursor()
@@ -262,7 +263,7 @@ class User:
 
 		self.is_running = True
 		self.update_script_status("running")
-		
+
 		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread.name} started")
 		print(f"[{getCurrentTime()}][User {self.user_id}] Started script")
 
@@ -364,3 +365,4 @@ class User:
 			new_last_line = self.last_row + len(name_col)
 			self.last_row = new_last_line
 			self.update_last_line(new_last_line)
+			self.update_message_limit_current_count()

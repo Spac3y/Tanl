@@ -18,8 +18,6 @@ from email.mime.multipart import MIMEMultipart
 
 from backend import User, createAccount # * My creation
 
-# TODO: Problem when using the same port whatsapp wehbhook will send all data from all clients to same link
-# Filter data by user_id or by email
 
 # TODO: Implement unit tests
 # * 1. Send messages
@@ -123,6 +121,7 @@ def getEmail() -> str:
 		return redirect(url_for('login'))
 
 def getUserID():
+	# TODO: See why i return [-1, email] when user is not found in DB
 	email =  getEmail()
 	user_id = get_user_id_DB(email)
 	if user_id is not None:
@@ -529,8 +528,8 @@ def profile_updates():
 
 				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
 					current_user = retUser(get_user_id_DB(vEmail))
-					# * UPDATE HERE FOR TEMPLATE NAME
-					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName, vNameCol, vPhoneCol) and current_user.update_message_limits(limitEnabled, mLimit)):
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName, vNameCol, vPhoneCol) and current_user.update_message_limit(limitEnabled, mLimit)):
+						current_user.refresh()
 						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500
@@ -550,8 +549,6 @@ def profile_updates():
 				if(createAccount(vGSheetID, vWToken, vWNumber, vEmail, vPriceLead)): # * accout created in db
 					return jsonify({ "result" : "success"}), 200
 				return jsonify({ "result" : "false"}), 500
-
-			handlePreconfReponse()
 		else:
 			return "Method not allowed",405
 
@@ -577,6 +574,9 @@ def webhook():
 		if 'contacts' in data['entry'][0]['changes'][0] and 'messages' in data['entry'][0]['changes'][0]:
 			is_response = True
 			message_id = 'none'
+			# message_id = data['entry'][0]['changes'][0]['value']['messages'][0]['id']
+			# client_name = data['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']
+			# client_phone = data['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id']
 		else:
 			status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
 			message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
@@ -584,6 +584,8 @@ def webhook():
 		if(updateMessageEvent(status, message_id, conversation_id, is_response,  getUserID[1]) == True):
 			return jsonify({"status" : "success"}), 200
 		return jsonify({"error" : "Internal server error"}), 500
+
+		handlePreconfReponse()
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -598,5 +600,5 @@ def trigger_500():
 	raise Exception("Test error")
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=False)  # Enables HTTPS for local testing
+	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
 	
