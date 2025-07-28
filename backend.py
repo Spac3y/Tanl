@@ -127,19 +127,44 @@ class User:
 				result =  cursor.fetchall()
 
 				if len(result) > 1:
-					print(f"[{getCurrentTime()}][User {self.user_id}] More than one user found with ID: {self.user_id}. Please check database for duplicates!")
-					return None
+					print(f"[{getCurrentTime()}][User {self.user_id}] ERROR!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
 				
 				return result[0] if result else None
 		except json.JSONDecodeError:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
-# TODO: create update function for message limits
-# TODO: create getter function for message limits
-# TODO: Implement update message_limit in profile page
-# TODO: When using sender() function, check the message limit
-# TODO: Add new fields for message limits in database: current_count, date
+	def get_message_limit(self):
+		try:
+			with sqlite3.connect("database.db") as conn:
+				cursor = conn.cursor()
+				cursor.execute("SELECT * FROM message_limit WHERE user_id = ?", (self.user_id,))
+				result = cursor.fetchall()
+
+				if len(result) > 1:
+					print(f"[{getCurrentTime()}][User {self.user_id}] ERROR!!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
+					return result[0] if result else None
+				
+				if len(result) == 0:
+					cursor.execute("INSERT INTO message_limit (user_id, is_on, limit_value) VALUES (?,?,?)", (self.user_id, 0, 100))
+					conn.commit()
+					cursor.execute("SELECT * FROM message_limit WHERE user_id = ?", (self.user_id,))
+					result = cursor.fetchall()
+					return result[0] if result else None
+				
+				return result[0] if result else None
+		
+		except json.JSONDecodeError:
+			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
+			return None
+
+def reset_message_limit(self, date_now: str):
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, self.user_id))
+		conn.commit()
+	print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
+
 
 	def update_message_current_count(self):
 		try:
@@ -250,6 +275,22 @@ class User:
 
 		print(f"[{getCurrentTime()}][User {self.user_id}] Script stopped")
 
+	def messageLimit(self):
+		result = get_message_limit()
+		date_now = datetime.now().strftime("%Y-%m-%d")
+		
+		if result[1] == 0:
+			return True
+
+		elif result[4] != date_now:
+			reset_message_limit(self, date_now)
+			return True
+
+		elif result[4] == date_now and result[3] < result[2]:
+			return True
+		
+		return False
+
 	def listener(self):
 		try:
 			creds = self.refresh_credentials(self.user_id)
@@ -285,8 +326,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
-		# TODO: Make this option to be set in profile page
-		if compareMessageCount() == False:
+		if messageLimit() == False:
 			print(f"[{getCurrentTime()}] Message limit reached: {count} messages sent today.")
 			self.stop_listener()
 			return None

@@ -18,8 +18,6 @@ from email.mime.multipart import MIMEMultipart
 
 from backend import User, createAccount # * My creation
 
-# TODO: Implement message limit in profile page
-
 # TODO: Problem when using the same port whatsapp wehbhook will send all data from all clients to same link
 # Filter data by user_id or by email
 
@@ -477,6 +475,7 @@ def read_sheet():
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
+# TODO: Create a loading animation to show before the data is loaded
 @app.route("/profile")
 def profile():
 	force_redirect = request.args.get('force_redirect', default=0, type=int)
@@ -569,7 +568,6 @@ def webhook():
 			return "Not found", 404
 
 	elif request.method == 'POST':
-		# TODO: Find the message to change status ( search max 1 week old) ignore if status from webhook is sent
 		data = request.json
 		conversation_id =  data['entry'][0]['id']
 		is_response = False

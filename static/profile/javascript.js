@@ -18,7 +18,6 @@ const input_column_phone = document.getElementById("profile-column-phone")
 const input_message_limit = document.getElementById("limit-value")
 const input_limit_enabled = document.getElementById("limit-enabled")
 
-// TODO: Check if there is user in db
 window.onload = (event) => {
 	if (force_redirect === "1") {
 		input_email.readOnly = true;

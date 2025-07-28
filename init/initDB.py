@@ -59,8 +59,8 @@ def initializeMessageLimitDB():
 			user_id INTEGER PRIMARY KEY,
 			is_on BOOLEAN NOT NULL DEFAULT 0,
 			limit_value INTEGER NOT NULL DEFAULT 1000,
-			current_value INTEGER NOT NULL DEFAULT 0;
-			last_day DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			current_value INTEGER NOT NULL DEFAULT 0,
+			last_day TEXT NOT NULL DEFAULT (DATE('now')),
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 			);
 		""")
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 	# initializeUserDB()
 	# initializaEventsDB()
 	# initializeStatusDB()
-	# initializeMessageLimitDB()
+	initializeMessageLimitDB()
 	# addNewColumn()
 	# labamea()
 	print("Database initialized successfully.")
