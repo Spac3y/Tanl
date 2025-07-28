@@ -97,6 +97,7 @@ hr {
 input {
 	width: 40%;
 	text-align: start;
+	text-overflow: ellipsis;
 	margin: 0.4rem;
 	padding: 10px;
 	border: 1px solid grey;
@@ -107,8 +108,6 @@ input {
 button {
 	margin: 10px;
 }
-
-
 
 .bottom {
 	margin-bottom: 20px;
@@ -147,6 +146,7 @@ label {
 	border: 1px solid grey;
 	border-radius: 50%;
 	background-color: #999999;
+	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
 .tooltip .tooltiptext {

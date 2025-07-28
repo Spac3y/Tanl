@@ -147,6 +147,7 @@ const chart = new Chart(ctx, {
 		scales: {
 			y: {
 				beginAtZero: false,
+				min: 0,
 				ticks: {
 					callback: value => `${value.toLocaleString()} RON`
 				}
@@ -175,6 +176,7 @@ const chart2 = new Chart(ctx2, {
 		scales: {
 			y: {
 				beginAtZero: true,
+				min: 0,
 				ticks: {
 					callback: value => `${value.toLocaleString()} RON`
 				}

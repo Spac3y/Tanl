@@ -296,7 +296,7 @@ def getMonthlyValues(user_id: int):
 
 		rows = cursor.fetchall()
 		return [count for (count,) in rows]
-		
+
 def handlePreconfResponse(data):
 	# * Check for preconfigured response
 	try:
@@ -473,7 +473,7 @@ def read_sheet():
 
 	user = retUser(user_id[1])
 	script_status = user.get_script_status()
-	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{now}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
@@ -490,6 +490,7 @@ def profile_updates():
 	else:
 		if request.method == 'GET':
 			user_data = retUser(getUserID()[1]).get_user_data()
+			message_limit = retUser(getUserID()[1]).get_message_limit()
 			response = {
 				"email": user_data[4],
 				"whatsapp_number": user_data[3],
@@ -498,7 +499,9 @@ def profile_updates():
 				"price_lead": user_data[7],
 				"template_name" : user_data[8],
 				"column_name" : user_data[9],
-				"column_phone" : user_data[10]
+				"column_phone" : user_data[10],
+				"limit_enabled" : message_limit[1],
+				"message_limit" : message_limit[2]
 			}
 			return jsonify(response), 200
 		elif request.method == 'POST':
@@ -520,11 +523,13 @@ def profile_updates():
 				vTemplateName = data['tName']
 				vNameCol = data['cName']
 				vPhoneCol = data['cPhone']
+				limitEnabled = data['limitEnabled']
+				mLimit = data['mLimit']
 
 				if(checkAccountByEmail(vEmail) == True): # * Account exists, update current values
 					current_user = retUser(get_user_id_DB(vEmail))
 					# * UPDATE HERE FOR TEMPLATE NAME
-					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName, vNameCol, vPhoneCol)):
+					if(current_user.update_account_details(vEmail, vWNumber, vWToken, vGSheetID, vPriceLead, vTemplateName, vNameCol, vPhoneCol) and current_user.update_message_limits(limitEnabled, mLimit)):
 						return jsonify({ "result" : "success" }), 200
 					else: 
 						return jsonify({"result" : "error"}), 500

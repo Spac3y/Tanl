@@ -43,6 +43,7 @@ class User:
 	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
 
 	# TODO: After modifying the database, change the constructor to read new data
+	# TODO: Implement a caching system for user data to avoid multiple DB calls
 	def __init__(self, user_id:int):
 		self.user_id = user_id
 		self.thread = None
@@ -58,6 +59,10 @@ class User:
 			self.template_name = current_user[8]
 			self.name_col = current_user[9]
 			self.phone_col = current_user[10]
+
+			message_limit = self.get_message_limit()
+			self.message_limit_enabled = message_limit[1]
+			self.message_limit_value = message_limit[2]
 
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
 			
@@ -136,17 +141,36 @@ class User:
 # TODO: When using sender() function, check the message limit
 # TODO: Add new fields for message limits in database: current_count, date
 
+	def update_message_current_count(self):
+		try:
+			with sqlite3.connect("database.db") as conn:
+				cursor = conn.cursor()
+				cursor.execute("""
+				UPDATE message_limit SET current_count = current_count + 1 WHERE user_id = ?;
+				""", (self.user_id,))
+				conn.commit()
+				return True
+		except sqlite3.Error as e:
+			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
+			return False
+
 	def update_message_limits(self, is_on: bool, value: int):
-		with sqlite3.connect("database.db") as conn:
-			cursor = conn.cursor
-			cursor.execute("""
-			INSERT INTO message_limit (user_id, is_on, limit_value)
-			VALUES (?, ?, ?)
-			ON CONFLICT(user_id) DO UPDATE SET
-				is_on = excluded.is_on,
-				limit_value = excluded.limit_value;
-			""", (self.user_id, is_on, value))
-			conn.commit()
+		try:
+			with sqlite3.connect("database.db") as conn:
+				cursor = conn.cursor()
+				cursor.execute("""
+				INSERT INTO message_limit (user_id, is_on, limit_value)
+				VALUES (?, ?, ?)
+				ON CONFLICT(user_id) DO UPDATE SET
+					is_on = excluded.is_on,
+					limit_value = excluded.limit_value;
+				""", (self.user_id, is_on, value))
+				conn.commit()
+				return True
+
+		except sqlite3.Error as e:
+			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message limits: {e}")
+			return False
 
 	def update_messages_table(self, message_id, conversation_id, event_type):
 		with sqlite3.connect("database.db") as conn:
