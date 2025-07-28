@@ -67,6 +67,7 @@ class User:
 			self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
 			
 			# TODO: check if the filename is correct | file is in folder
+
 			template_file_name = "template.json"
 			self.message_template = self.load_json(filename=template_file_name)
 			self.message_template['template']['name'] = self.template_name
@@ -158,13 +159,12 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
-def reset_message_limit(self, date_now: str):
-	with sqlite3.connect("database.db") as conn:
-		cursor = conn.cursor()
-		cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, self.user_id))
-		conn.commit()
-	print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
-
+	def reset_message_limit(self, date_now: str):
+		with sqlite3.connect("database.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, self.user_id))
+			conn.commit()
+		print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
 
 	def update_message_current_count(self):
 		try:
@@ -256,11 +256,14 @@ def reset_message_limit(self, date_now: str):
 		if self.is_running:
 			print(f"[User {self.user_id}] Script is already running")
 			return
-		self.is_running = True
-		self.update_script_status("running")
+
 		self.thread = threading.Thread(target=self.listener, daemon=True)
 		self.thread.start()
-		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread}")
+
+		self.is_running = True
+		self.update_script_status("running")
+		
+		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread.name} started")
 		print(f"[{getCurrentTime()}][User {self.user_id}] Started script")
 
 	def stop_listener(self):
@@ -268,7 +271,8 @@ def reset_message_limit(self, date_now: str):
 		# TODO: Fix error where script is already stopped
 		if not self.is_running:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Script is already stopped")
-			return
+			return None
+
 		self.is_running = False
 		self.update_script_status("stopped")
 		self.thread.join()

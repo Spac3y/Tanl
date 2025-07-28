@@ -26,7 +26,9 @@ from backend import User, createAccount # * My creation
 # * 2. Whatsapp webhook verification
 # * 3. Connection to google sheets
 # * 4. Get user data from database
-# TODO: When accesing through ngrok i get uri missmatch error FIX!!!!
+
+# ! When accesing through ngrok i get uri missmatch error FIX!!!!
+# * this error is caused because i have a dynamic url. Need to get domain for static webhook url
 
 # Whatsapp webhook verification token
 VERIFY_TOKEN = "my_super_secret_token"
@@ -585,8 +587,16 @@ def webhook():
 
 @app.errorhandler(404)
 def page_not_found(e):
-	return render_template('404/index.html'), 404
+	return render_template('404/index.html', error_message=str(e)), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+	return render_template('500/index.html', error_message=str(error)), 500
+
+@app.route('/trigger-500')
+def trigger_500():
+	raise Exception("Test error")
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
+	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=False)  # Enables HTTPS for local testing
 	
