@@ -22,13 +22,14 @@ const profile_content = document.getElementById("container");
 
 window.onload = (event) => {
 	if (force_redirect === "1") {
+		document.getElementById("title-page").innerText = "Creeza un cont nou";
 		input_email.readOnly = true;
 		input_email.style.backgroundColor = '#f0f0f0'; // light gray
 		input_email.style.border = '1px solid gray';
 		input_email.style.color = 'gray';
-		console.log("Force redirect!");
-		alert("Account was not found in DB. Please create one!");
 		input_email.value = email;
+		loading_indicator.style.display = "none";
+		profile_content.style.display = "block";
 	}
 	 else {
 		console.log("Not force redirect!");
