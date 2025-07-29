@@ -20,6 +20,8 @@ headers = {
 	"Authorization" : None
 }
 
+#TODO: Split app routes into multiple files and getter and updater functions in smaller files
+
 def getCurrentTime():
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
