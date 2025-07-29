@@ -13,6 +13,13 @@
 		var force_redirect = "{{ force_redir }}";
 		var email = "{{ email }}";
 	</script>
+
+	<!-- Loading Animation -->
+	<div id="loading">
+		<div class="spinner"></div>
+		<p>Loading...</p>
+	</div>
+
 	<div id="container">
 		<div id="heading">
 			<a href="/">
@@ -25,70 +32,71 @@
 			</div>
 		</div>
 		<hr>
-	<div class="main-wrapper">
-		<h1> Editare date profil</h1>
-		<div class="wrapper">
-			<h3>Valoare / Raspuns</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext"> Valoarea medie a unui produs vandut</span>
+		<div class="main-wrapper">
+			<h1> Editare date profil</h1>
+			<div class="wrapper">
+				<h3>Valoare / Raspuns</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext"> Valoarea medie a unui produs vandut</span>
+				</div>
+				<input id="profile-price-per-lead" type="number" placeholder="100">
 			</div>
-			<input id="profile-price-per-lead" type="number" placeholder="100">
-		</div>
-		<div class="wrapper">
-			<h3>Limita mesaje pe zi</h3>
-			<div class="tooltip" id="tooltip-checkbox">
-				<input type="checkbox" id="limit-enabled">
+			<div class="wrapper">
+				<h3>Limita mesaje pe zi</h3>
+				<div class="tooltip" id="tooltip-checkbox">
+					<input type="checkbox" id="limit-enabled">
+				</div>
+				<input type="number" id="limit-value" class="limit-value" placeholder="Limita mesaje pe zi" min="1">
 			</div>
-			<input type="number" id="limit-value" class="limit-value" placeholder="Limita mesaje pe zi" min="1">
-		</div>
-		<div class="wrapper">
-			<h3>Nume mesaj template</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext"> Acesta reprezinta numele template-ului pentru mesajele automate. Se editeaza din panoul meta</span>
+			<div class="wrapper">
+				<h3>Nume mesaj template</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext"> Acesta reprezinta numele template-ului pentru mesajele automate. Se editeaza din panoul meta</span>
+				</div>
+				<input id="profile-template-name" type="text" placeholder="Nume template">
 			</div>
-			<input id="profile-template-name" type="text" placeholder="Nume template">
-		</div>
-		<div class="wrapper">
-			<h3>Coloane pentru nume si numar de telefon</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext"> Acesta valori corespund cu coloanele din google sheets unde sunt primite numele clientelor respectiv numerele lor de telefon</span>
+			<div class="wrapper">
+				<h3>Coloane pentru nume si numar de telefon</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext"> Acesta valori corespund cu coloanele din google sheets unde sunt primite numele clientelor respectiv numerele lor de telefon</span>
+				</div>
+				<div class="double-input">
+					<input id="profile-column-name" type="text" placeholder="Coloana nume client">
+					<input id="profile-column-phone" type="text" placeholder="Coloana numar telefon client">
+				</div>
 			</div>
-			<div class="double-input">
-				<input id="profile-column-name" type="text" placeholder="Coloana nume client">
-				<input id="profile-column-phone" type="text" placeholder="Coloana numar telefon client">
+			<div class="wrapper">
+				<h3>E-mail</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext">Introduceți o adresă de email validă</span>
+				</div>
+				<input id="profile-email" type="email" placeholder="name@email.com">
 			</div>
-		</div>
-		<div class="wrapper">
-			<h3>E-mail</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext">Introduceți o adresă de email validă</span>
+			<div class="wrapper">
+				<h3>Whatsapp Phone Number ID</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext">Phone number ID se gaseste pe pagina Meta Developers unde se acceseaza proiectul curent > Whatsapp > Api Setup > Phone Number ID copy</span>
+				</div>
+				<input id="profile-whatsapp-number" type="text" placeholder="123456789012345">
 			</div>
-			<input id="profile-email" type="email" placeholder="name@email.com">
-		</div>
-		<div class="wrapper">
-			<h3>Whatsapp Phone Number ID</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext">Phone number ID se gaseste pe pagina Meta Developers unde se acceseaza proiectul curent > Whatsapp > Api Setup > Phone Number ID copy</span>
+			<div class="wrapper">
+				<h3>Whatsapp token</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext">Folosind <a href="https://developers.facebook.com/blog/post/2022/12/05/auth-tokens/">acest link </a> se va creea un token permanent de autentificare</span>
+				</div>
+				<input id="profile-whatsapp-token" type="text" placeholder="EAAP0592390420...">
 			</div>
-			<input id="profile-whatsapp-number" type="text" placeholder="123456789012345">
-		</div>
-		<div class="wrapper">
-			<h3>Whatsapp token</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext">Folosind <a href="https://developers.facebook.com/blog/post/2022/12/05/auth-tokens/">acest link </a> se va creea un token permanent de autentificare</span>
+			<div class="wrapper bottom">
+				<h3>Google sheet ID</h3>
+				<div class="tooltip">?
+					<span class="tooltiptext">Pentru a obtine acest ID se va intra in google sheets iar in bara de adrese se va copia valoarea ce urmeaza dupa /spreadsheet/d/  ( id-ul are exact 44 de caractere ) </span>
+				</div>
+				<input id="profile-google-sheetID" text="text" placeholder="google sheets id">
 			</div>
-			<input id="profile-whatsapp-token" type="text" placeholder="EAAP0592390420...">
-		</div>
-		<div class="wrapper bottom">
-			<h3>Google sheet ID</h3>
-			<div class="tooltip">?
-				<span class="tooltiptext">Pentru a obtine acest ID se va intra in google sheets iar in bara de adrese se va copia valoarea ce urmeaza dupa /spreadsheet/d/  ( id-ul are exact 44 de caractere ) </span>
+			<div class="button-wrapper">
+				<button class="clickable" id="profile-save"> Salveaza </button>
+				<button class="clickable" id="logout"> Log out </button>
 			</div>
-			<input id="profile-google-sheetID" text="text" placeholder="google sheets id">
-		</div>
-		<div class="button-wrapper">
-			<button class="clickable" id="profile-save"> Salveaza </button>
-			<button class="clickable" id="logout"> Log out </button>
 		</div>
 	</div>
 </body>

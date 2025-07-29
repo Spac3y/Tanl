@@ -10,7 +10,6 @@ const defaultTimeInterval = "one_day"
 
 window.onload = function () {
 	getTimeInterval(defaultTimeInterval)
-	console.log("window on log functino called")
 	fetch('/status', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -18,7 +17,7 @@ window.onload = function () {
 	})
 		.then(response => response.json())
 		.then(data => {
-			console.log("Response from Flask:", data.result)
+			// console.log("Response from Flask:", data.result)
 			document.getElementById("text_status").textContent = data.status
 			if (data.status == "Running") document.getElementById("text_status").style.color = "green"
 			else document.getElementById("text_status").style.color = "red"
@@ -30,7 +29,7 @@ function selectTime(btn, interval) {
 	document.querySelectorAll('.opt-timp').forEach(b => b.classList.remove('active'));
 	btn.classList.add('active');
 	getTimeInterval(interval);
-	console.log('Interval selectat:', interval);
+	// console.log('Interval selectat:', interval);
 }
 
 function getTimeInterval(selectedInterval) {
@@ -46,7 +45,7 @@ function getTimeInterval(selectedInterval) {
 	})
 		.then(response => response.json())
 		.then(data => {
-			console.log(data);
+			// console.log(data);
 			quant = Number(data['price-lead'])
 
 			if (quant === "") {

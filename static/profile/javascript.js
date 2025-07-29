@@ -3,7 +3,6 @@ document.getElementById('limit-enabled').addEventListener('change', function() {
 	document.getElementById('limit-value').disabled = !this.checked;
 });
 
-
 button_save_changes = document.getElementById("profile-save");
 button_logout = document.getElementById("logout");
 
@@ -17,6 +16,9 @@ const input_column_name = document.getElementById("profile-column-name")
 const input_column_phone = document.getElementById("profile-column-phone")
 const input_message_limit = document.getElementById("limit-value")
 const input_limit_enabled = document.getElementById("limit-enabled")
+
+const loading_indicator = document.getElementById("loading");
+const profile_content = document.getElementById("container");
 
 window.onload = (event) => {
 	if (force_redirect === "1") {
@@ -54,7 +56,10 @@ window.onload = (event) => {
 							input_column_phone.value = data.column_phone;
 							input_message_limit.value = data.message_limit;
 							input_limit_enabled.checked = data.limit_enabled === 1 ? true : false;
-							console.log("INSERT current user data inside input tag");
+
+							loading_indicator.style.display = "none";
+							profile_content.style.display = "block";
+							// console.log("INSERT current user data inside input tag");
 						} else console.log("data missing from response")
 					})
 					.catch(error => console.error("!ERROR: ", error))

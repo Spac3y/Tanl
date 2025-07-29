@@ -57,8 +57,12 @@
 		<p>Internal Server Error</p>
 		<p>Something went wrong. The developer has been notified.</p>
 		{% if error_message %}
-		<pre>{{ error_message }}</pre>
+		<div style="border: 1px solid red; padding: 10px; background-color: #fee;">
+			<strong>Error details:</strong>
+			<pre>{{ error_message }}</pre>
+		</div>
 		{% endif %}
+		<script>console.log(error_message)</script>
 	</div>
 </body>
 

@@ -346,8 +346,7 @@ def design():
 
 	user = retUser(user_id[1])
 	script_status = user.get_script_status()
-	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
-
+	# print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 	return render_template("design/index.html", script_st = script_status), 200
 
 @app.route("/login")
@@ -491,7 +490,6 @@ def read_sheet():
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
-# TODO: Create a loading animation to show before the data is loaded
 @app.route("/profile")
 def profile():
 	force_redirect = request.args.get('force_redirect', default=0, type=int)
@@ -611,5 +609,5 @@ def internal_error(error):
 	return render_template('500/index.html', error_message=str(error)), 500
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
+	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)  # Enables HTTPS for local testing
 	
