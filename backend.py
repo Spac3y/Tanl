@@ -71,7 +71,6 @@ class User:
 
 		self.url = f"https://graph.facebook.com/v21.0/{self.whatsapp_id}/messages"
 
-		# TODO: check if the filename is correct | file is in folder
 		template_file_name = "template.json"
 		self.message_template = self.load_json(filename=template_file_name)
 		self.message_template['template']['name'] = self.template_name
@@ -253,6 +252,9 @@ class User:
 			""", (self.user_id, status))
 			conn.commit()
 
+	def is_thread_running(self):
+		return self.thread is not None and self.thread.is_alive()
+
 	def launch_listener(self):
 		if self.is_running:
 			print(f"[User {self.user_id}] Script is already running")
@@ -264,19 +266,15 @@ class User:
 		self.is_running = True
 		self.update_script_status("running")
 
-		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread.name} started")
 		print(f"[{getCurrentTime()}][User {self.user_id}] Started script")
 
 	def stop_listener(self):
-		print(f"[{getCurrentTime()}][User {self.user_id}] {self.thread}")
-		# TODO: Fix error where script is already stopped
 		if not self.is_running:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Script is already stopped")
-			return None
-
+			return 
 		self.is_running = False
-		self.update_script_status("stopped")
 		self.thread.join()
+		self.update_script_status("stopped")
 
 		print(f"[{getCurrentTime()}][User {self.user_id}] Script stopped")
 
@@ -309,7 +307,6 @@ class User:
 			while self.is_running:
 				try:
 					sheet_range = f"{self.name_col}{self.last_row}:{self.name_col}"
-					# print("--%s--" %sheet_range)
 					name_column = self.sheet.get(sheet_range)
 
 					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
@@ -317,10 +314,6 @@ class User:
 					if(len(name_column) >=1 and len(name_column[0]) != 0):
 						print("nameCol : ", name_column) 
 						self.sender()
-						# print("Length : ", len(nameCol))
-						# print('nameCol[0] : ', nameCol[0])
-						# print('Length nameCol[0] : ', len(nameCol[0]))
-						# print("-----------------")
 					creds = self.refresh_credentials(self.user_id)
 				except Exception as e:
 					print(f"[{getCurrentTime()}][User {self.user_id}] !-! Error: {e}")

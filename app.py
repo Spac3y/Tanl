@@ -333,6 +333,7 @@ def handlePreconfResponse(data):
 	except Exception as e:
 		return f"Error: {str(e)}", 400
 
+# TODO: Update icons for profile home and start-stop buttons
 @app.route('/')
 def design():
 	if 'credentials' not in session:
@@ -437,12 +438,26 @@ def submit_json():
 @app.route('/status', methods=['POST'])
 def status():
 	ps = retUser(getUserID()[1]).get_script_status()
-	value = "Running" if ps == True else "Stopped"
+	thread_status = retUser(getUserID()[1]).is_thread_running()
+	value = None
+
+	if thread_status and ps:
+		value = "Running"
+	elif ps and not thread_status:
+		value = "Stopped"
+		retUser(getUserID()[1]).update_script_status("stopped")
+	elif not ps and thread_status:
+		value = "Running"
+		retUser(getUserID()[1]).update_script_status("running")
+	elif not ps and not thread_status:
+		value = "Stopped"
+	else:
+		value = "Error"
+
 	return jsonify({'status' : value })
 
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
-	# TODO: Before updating the status, check if the script actually started...duhhhh
 	data = request.get_json()
 	if not data or "choice" not in data or 'credentials' not in session:
 		return jsonify({"error" : "Invalid request"}), 400
@@ -594,10 +609,6 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_error(error):
 	return render_template('500/index.html', error_message=str(error)), 500
-
-@app.route('/trigger-500')
-def trigger_500():
-	raise Exception("Test error")
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True)  # Enables HTTPS for local testing
