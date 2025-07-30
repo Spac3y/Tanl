@@ -4,9 +4,14 @@ start_button = document.getElementById('start')
 stop_button = document.getElementById('stop')
 
 const ctx = document.getElementById('lineChart').getContext('2d');
-const ctx2 = document.getElementById('barChart').getContext('2d');
 
 const defaultTimeInterval = "one_day"
+
+function formatNumber(params) {
+	const number = params;
+	const formatted = number.toLocaleString('ro-RO'); // Romanian locale
+	return formatted;
+}
 
 window.onload = function () {
 	getTimeInterval(defaultTimeInterval)
@@ -52,13 +57,13 @@ function getTimeInterval(selectedInterval) {
 				alert("Eroare Interna: Nu se poate preluare valoare / raspuns din DB");
 			} else {
 				var sent_text = document.getElementById("price-per-lead-value");
-				sent_text.textContent = (Number(quant) * Number(data['sent_count']));
+				sent_text.textContent = formatNumber(Number(quant) * Number(data['sent_count']));
 				var seen_text = document.getElementById("seen-messages-value")
 				seen_text.textContent = (Number(data['seen_count']));
 				var resp_text = document.getElementById("responded-messages-value");
-				resp_text.textContent = (Number(data['resp_count']));
+				resp_text.textContent = formatNumber(Number(data['resp_count']));
 				var sent_text_count = document.getElementById("sent-messages-value");
-				sent_text_count.textContent = (Number(data['sent_count']));
+				sent_text_count.textContent = formatNumber(Number(data['sent_count']));
 				
 				// * Update first chart
 				for(let i = 0;i<10;i++) {

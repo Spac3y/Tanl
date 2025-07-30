@@ -7,6 +7,9 @@
 	<link rel="stylesheet" href="{{ url_for('static', filename='profile/style.css') }}">
 	<script defer src="{{ url_for('static', filename='profile/javascript.js') }}"></script>
 	<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png')}}">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
 	<script>
@@ -22,12 +25,12 @@
 
 	<div id="container">
 		<div id="heading">
-			<a href="/">
+			<a href="/" id="title-tag">
 				<div id="title">💵 TANL</div>
 			</a>
-			<div id="profile-icon">
+			<div id="profile-icon-wrapper">
 				<a href="/profile">
-					<p>👤 ➡️</p>
+					<img src="https://i.pravatar.cc/40" alt="Profile Icon" class="profile-icon">
 				</a>
 			</div>
 		</div>
@@ -35,28 +38,28 @@
 		<div class="main-wrapper">
 			<h1 id="title-page"> Editare date profil</h1>
 			<div class="wrapper">
-				<h3>Valoare / Raspuns</h3>
+				<p>Valoare / Raspuns</p>
 				<div class="tooltip">?
 					<span class="tooltiptext"> Valoarea medie a unui produs vandut</span>
 				</div>
 				<input id="profile-price-per-lead" type="number" placeholder="100">
 			</div>
 			<div class="wrapper">
-				<h3>Limita mesaje pe zi</h3>
+				<p>Limita mesaje pe zi</p>
 				<div class="tooltip" id="tooltip-checkbox">
 					<input type="checkbox" id="limit-enabled">
 				</div>
 				<input type="number" id="limit-value" class="limit-value" placeholder="Limita mesaje pe zi" min="1">
 			</div>
 			<div class="wrapper">
-				<h3>Nume mesaj template</h3>
+				<p>Nume mesaj template</p>
 				<div class="tooltip">?
 					<span class="tooltiptext"> Acesta reprezinta numele template-ului pentru mesajele automate. Se editeaza din panoul meta</span>
 				</div>
 				<input id="profile-template-name" type="text" placeholder="Nume template">
 			</div>
 			<div class="wrapper">
-				<h3>Coloane pentru nume si numar de telefon</h3>
+				<p>Coloane pentru nume si numar de telefon</p>
 				<div class="tooltip">?
 					<span class="tooltiptext"> Acesta valori corespund cu coloanele din google sheets unde sunt primite numele clientelor respectiv numerele lor de telefon</span>
 				</div>
@@ -66,28 +69,28 @@
 				</div>
 			</div>
 			<div class="wrapper">
-				<h3>E-mail</h3>
+				<p>E-mail</p>
 				<div class="tooltip">?
 					<span class="tooltiptext">Introduceți o adresă de email validă</span>
 				</div>
 				<input id="profile-email" type="email" placeholder="name@email.com">
 			</div>
 			<div class="wrapper">
-				<h3>Whatsapp Phone Number ID</h3>
+				<p>Whatsapp Phone Number ID</p>
 				<div class="tooltip">?
 					<span class="tooltiptext">Phone number ID se gaseste pe pagina Meta Developers unde se acceseaza proiectul curent > Whatsapp > Api Setup > Phone Number ID copy</span>
 				</div>
 				<input id="profile-whatsapp-number" type="text" placeholder="123456789012345">
 			</div>
 			<div class="wrapper">
-				<h3>Whatsapp token</h3>
+				<p>Whatsapp token</p>
 				<div class="tooltip">?
 					<span class="tooltiptext">Folosind <a href="https://developers.facebook.com/blog/post/2022/12/05/auth-tokens/">acest link </a> se va creea un token permanent de autentificare</span>
 				</div>
 				<input id="profile-whatsapp-token" type="text" placeholder="EAAP0592390420...">
 			</div>
 			<div class="wrapper bottom">
-				<h3>Google sheet ID</h3>
+				<p>Google sheet ID</p>
 				<div class="tooltip">?
 					<span class="tooltiptext">Pentru a obtine acest ID se va intra in google sheets iar in bara de adrese se va copia valoarea ce urmeaza dupa /spreadsheet/d/  ( id-ul are exact 44 de caractere ) </span>
 				</div>

@@ -121,7 +121,6 @@ def getEmail() -> str:
 		return redirect(url_for('login'))
 
 def getUserID():
-	# TODO: See why i return [-1, email] when user is not found in DB
 	email =  getEmail()
 	user_id = get_user_id_DB(email)
 	if user_id is not None:
@@ -587,6 +586,7 @@ def webhook():
 		if 'contacts' in data['entry'][0]['changes'][0] and 'messages' in data['entry'][0]['changes'][0]:
 			is_response = True
 			message_id = 'none'
+			# * will be used later when implementing whatsapp client side
 			# message_id = data['entry'][0]['changes'][0]['value']['messages'][0]['id']
 			# client_name = data['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']
 			# client_phone = data['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id']
