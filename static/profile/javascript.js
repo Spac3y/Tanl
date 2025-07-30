@@ -32,7 +32,6 @@ window.onload = (event) => {
 		profile_content.style.display = "block";
 	}
 	 else {
-		console.log("Not force redirect!");
 		vEmail =  email;
 		fetch('/profile-updates', {
 			method: 'POST',

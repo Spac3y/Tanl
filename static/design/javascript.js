@@ -4,6 +4,7 @@ start_button = document.getElementById('start')
 stop_button = document.getElementById('stop')
 
 const ctx = document.getElementById('lineChart').getContext('2d');
+const ctx2 = document.getElementById('barChart').getContext('2d');
 
 const defaultTimeInterval = "one_day"
 
