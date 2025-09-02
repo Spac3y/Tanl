@@ -19,7 +19,7 @@ from email.mime.multipart import MIMEMultipart
 from backend import User, createAccount # * My creation
 
 
-# TODO: Implement unit tests
+# *: Implement unit tests
 # * 1. Send messages
 # * 2. Whatsapp webhook verification
 # * 3. Connection to google sheets
@@ -57,6 +57,7 @@ def getCurrentTime():
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
 
+# *
 def get_user_id_DB(email:str) -> int:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -67,6 +68,7 @@ def get_user_id_DB(email:str) -> int:
 		else:
 			return None
 
+# *
 def get_len_message_sorted(user_id:int, event_type:str, timestamp: str) -> int:
 	if(event_type == "sent"):
 		with sqlite3.connect("database.db") as conn:
@@ -134,6 +136,7 @@ def retUser(user_id: int):
 		_user_cache[user_id] = User(user_id)
 	return _user_cache[user_id]
 
+# *
 def checkAccountByEmail(email: str) -> bool:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -143,6 +146,7 @@ def checkAccountByEmail(email: str) -> bool:
 		if exists: return True
 		return False
 
+# *
 def save_credentials_to_db(user_id : int, credentials : dict):
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -151,6 +155,7 @@ def save_credentials_to_db(user_id : int, credentials : dict):
 		""", (credentials, user_id))
 		conn.commit()
 
+# *
 def load_credentials_from_db(user_id : int):
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -171,6 +176,7 @@ def refresh_credentials(user_id: int) :
 		
 	return creds
 
+# *
 def updateMessageEvent(new_type:str, message_id: str, conversation_id:str, is_response:bool, user_id:int) -> bool:
 	cutoff_date = (datetime.now() - timedelta(weeks=1)).strftime("%Y-%m-%d %H:%M:%S")
 	with sqlite3.connect("database.db") as conn:
@@ -332,7 +338,6 @@ def handlePreconfResponse(data):
 	except Exception as e:
 		return f"Error: {str(e)}", 400
 
-# TODO: Update icons for profile home and start-stop buttons
 @app.route('/')
 def design():
 	if 'credentials' not in session:
@@ -489,6 +494,7 @@ def read_sheet():
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
+# TODO: When creating account put email inside cookie not url
 @app.route("/profile")
 def profile():
 	force_redirect = request.args.get('force_redirect', default=0, type=int)
@@ -610,4 +616,3 @@ def internal_error(error):
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)  # Enables HTTPS for local testing
-	

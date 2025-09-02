@@ -15,6 +15,8 @@ import threading
 from datetime import datetime
 from time import sleep
 
+from backend.db import getFunctions
+
 headers = {
 	"Content-Type" : "application/json",
 	"Authorization" : None
@@ -33,6 +35,7 @@ def transformPhoneNumber(phoneNr):
 	phoneNumber = phoneNr[4:7]+phoneNr[8:11]+phoneNr[12:15]
 	return phoneNumber
 
+# *
 def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str, price_lead:int, template_name: str, column_name:str, column_phone:str ) -> bool:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
@@ -42,9 +45,8 @@ def createAccount(sheet_id: str, whatsapp_key: str, whatsapp_id:str, email: str,
 		return True
 
 class User:
-	scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"]
-
 	# TODO: Implement a caching system for user data to avoid multiple DB calls
+	# TODO: Minimize the number of DB calls 
 	def __init__(self, user_id:int):
 		self.user_id = user_id
 		self.thread = None
@@ -92,6 +94,7 @@ class User:
 			print(f"[{getCurrentTime()}] Error: Invalid Json Format")
 			return None
 
+	# *
 	def save_credentials_to_db(self, user_id : int, credentials : dict):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -100,6 +103,7 @@ class User:
 			""", (credentials.to_json(), user_id))
 			conn.commit()
 
+	# *
 	def load_credentials_from_db(self,user_id : int):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -122,6 +126,7 @@ class User:
 		except Exception as e:
 			print(f"[{getCurrentTime()}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
 	
+	# *
 	def get_user_data(self):
 		try:
 			with sqlite3.connect("database.db") as conn:
@@ -137,6 +142,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
+	# *
 	def get_message_limit(self):
 		try:
 			with sqlite3.connect("database.db") as conn:
@@ -161,6 +167,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
+	# *
 	def reset_message_limit(self, date_now: str):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -168,6 +175,7 @@ class User:
 			conn.commit()
 		print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
 
+	# *
 	def update_message_limit_current_count(self):
 		try:
 			with sqlite3.connect("database.db") as conn:
@@ -181,6 +189,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
 			return False
 
+	# *
 	def update_message_limit(self, is_on: bool, value: int):
 		try:
 			with sqlite3.connect("database.db") as conn:
@@ -199,6 +208,7 @@ class User:
 			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message limits: {e}")
 			return False
 
+	# *
 	def update_messages_table(self, message_id, conversation_id, event_type):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -207,6 +217,7 @@ class User:
 			""", (self.user_id, message_id, event_type))
 			conn.commit()
 
+	# *
 	def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead: int, template_name: str, name_col: str, phone_col: str) -> bool:
 		name_col = name_col.upper()
 		phone_col = phone_col.upper()
@@ -217,12 +228,14 @@ class User:
 			conn.commit()
 		return True
 
+	# *
 	def update_last_line(self, last_row):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("UPDATE users SET last_row = ? WHERE user_id = ?", (last_row, self.user_id))
 			conn.commit()
 
+	# *
 	def get_script_status(self) -> bool:
 		with sqlite3.connect('database.db') as conn:
 			cursor = conn.cursor()
@@ -239,6 +252,7 @@ class User:
 			
 			raise ValueError(f"Either no value was found for USER_ID: {self.user_id} OR bad value from status_script: {result}")
 
+	# *
 	def getPriceLead(self) -> int:
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -246,6 +260,7 @@ class User:
 			result = cursor.fetchone()[0]
 			return result
 
+	# *
 	def update_script_status(self, status):
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
