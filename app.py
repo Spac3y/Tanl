@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 # for interactive message
-import smtplib
+import smtplibW
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -41,7 +41,7 @@ email_message['From'] = SENDER_EMAIL
 email_message['To'] = RECEIVER_EMAIL
 email_message['Subject'] = subject
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 with open('secret_key.txt', 'r') as f:
 	app.secret_key = f.read()
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
