@@ -353,6 +353,7 @@ def design():
 	# print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 	return render_template("design/index.html", script_st = script_status), 200
 
+# *
 @app.route("/login")
 def login():
 	if 'credentials' in session:
