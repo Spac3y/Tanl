@@ -8,3 +8,10 @@ def login():
 		print(f"[{getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return render_template("login/index.html")
+
+@app.route("/logout")
+def logout():
+	if 'credentials' in session:
+		print(f"[{getCurrentTime()}]--- Logging user out ---")
+	session.clear()
+	return redirect(url_for('design'))

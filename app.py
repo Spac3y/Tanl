@@ -361,6 +361,7 @@ def login():
 	session.clear()
 	return render_template("login/index.html")
 
+# *
 @app.route("/logout")
 def logout():
 	if 'credentials' in session:
@@ -402,6 +403,7 @@ def callback():
 
 	return redirect(url_for("design"))
 
+# *
 @app.route('/submit_json', methods=['POST'])
 def submit_json():
 	data = request.get_json()
@@ -439,6 +441,7 @@ def submit_json():
 		"result" : "succes"
 	})
 
+# *
 @app.route('/status', methods=['POST'])
 def status():
 	ps = retUser(getUserID()[1]).get_script_status()
@@ -460,6 +463,7 @@ def status():
 
 	return jsonify({'status' : value })
 
+# *
 @app.route('/start-stop', methods=['POST'])
 def start_stop():
 	data = request.get_json()
@@ -502,6 +506,7 @@ def profile():
 	email = request.args.get('email', default=getEmail(), type=str)
 	return render_template('profile/index.html', force_redir = force_redirect, email = email)
 
+# *
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
@@ -571,6 +576,7 @@ def profile_updates():
 		else:
 			return "Method not allowed",405
 
+# *
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
 	if request.method == 'GET':
@@ -607,10 +613,12 @@ def webhook():
 
 		handlePreconfReponse()
 
+# *
 @app.errorhandler(404)
 def page_not_found(e):
 	return render_template('404/index.html', error_message=str(e)), 404
 
+# *
 @app.errorhandler(500)
 def internal_error(error):
 	return render_template('500/index.html', error_message=str(error)), 500
