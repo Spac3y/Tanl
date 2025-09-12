@@ -10,9 +10,9 @@ Every line coresponds to a person that filled out a form and sends them a respon
 
 # Commits:
 Every commit title must be written using this structure:
-> {category} : {title} - {small description}
+> {category} : {title} - {description}
 
-These are all the categories:
+## These are all the categories:
 - feat : feature -> api
 - fix : bug fixes
 - refactor
@@ -23,4 +23,4 @@ These are all the categories:
 - config : config file changes
 - ui/ux : ui / ux changes for cliend end
 - database/db : db updates
-! if necessary use () after every category to specify where the change has been made
+> If necessary use () after every category to specify where the change has been made
