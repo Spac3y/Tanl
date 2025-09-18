@@ -1,11 +1,15 @@
-from flask import Flask
+from flask import Blueprint, request, jsonify, session, redirect, url_for
+from googleapiclient.discovery import build
+import google.oauth2.credentials
+import json
 
-@app.route('/submit_json', methods=['POST'])
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+@api_bp.route('/submit_json', methods=['POST'])
 def submit_json():
 	data = request.get_json()
 	if not data or "choice" not in data:
 		return jsonify({"error" : "Invalid request"}), 400
-	# print("[ JSON Received from js Code ] : ", data['choice'])
 
 	if 'credentials' not in session:
 		return redirect(url_for('index'))
@@ -37,7 +41,7 @@ def submit_json():
 		"result" : "succes"
 	})
 
-@app.route('/status', methods=['POST'])
+@api_bp.route('/status', methods=['POST'])
 def status():
 	ps = retUser(getUserID()[1]).get_script_status()
 	thread_status = retUser(getUserID()[1]).is_thread_running()
@@ -58,7 +62,7 @@ def status():
 
 	return jsonify({'status' : value })
 
-@app.route("/profile-updates", methods=['GET', 'POST'])
+@api_bp.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
 		return 401
@@ -127,7 +131,25 @@ def profile_updates():
 		else:
 			return "Method not allowed",405
 
-@app.route('/webhook', methods=['GET', 'POST'])
+@api_bp.route('/start-stop', methods=['POST'])
+def start_stop():
+	data = request.get_json()
+	if not data or "choice" not in data or 'credentials' not in session:
+		return jsonify({"error" : "Invalid request"}), 400
+
+	received_data = data['choice']
+	if received_data == '0':
+		retUser(getUserID()[1]).stop_listener()
+		return jsonify({"message" : "Stopped script"}), 200
+	
+	elif received_data == '1':
+		print(f"[{getCurrentTime()}][User {getUserID()[1]}] Starting script")
+		retUser(getUserID()[1]).launch_listener()
+		return jsonify({"message" : "Started script"}), 200
+	
+	print(f"[{getCurrentTime()}][User {getUserID()[1]}] Error invalid value provided")
+
+@api_bp.route('/webhook', methods=['GET', 'POST'])
 def webhook():
 	if request.method == 'GET':
 		mode = request.args.get('hub.mode')

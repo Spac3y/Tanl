@@ -15,7 +15,7 @@ import threading
 from datetime import datetime
 from time import sleep
 
-from backend.db import getFunctions
+from backend.utils import getCurrentTime
 
 headers = {
 	"Content-Type" : "application/json",

@@ -12,12 +12,13 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 # for interactive message
-import smtplibW
+import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from backend import User, createAccount # * My creation
+from back_end import User, createAccount # * My creation
 
+from frontend.routes.login import login_bp
 
 # *: Implement unit tests
 # * 1. Send messages
@@ -53,6 +54,7 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 
 _user_cache = {}
 
+# *
 def getCurrentTime():
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
@@ -622,6 +624,8 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_error(error):
 	return render_template('500/index.html', error_message=str(error)), 500
+
+app.register_blueprint(login_bp)
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)  # Enables HTTPS for local testing
