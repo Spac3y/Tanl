@@ -15,7 +15,7 @@ import threading
 from datetime import datetime
 from time import sleep
 
-from backend.utils import getCurrentTime
+from backend import utils
 
 headers = {
 	"Content-Type" : "application/json",
@@ -23,10 +23,6 @@ headers = {
 }
 
 #TODO: Split app routes into multiple files and getter and updater functions in smaller files
-
-def getCurrentTime():
-	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	return now
 
 def transformPhoneNumber(phoneNr):
 	phoneNr = str(phoneNr)
@@ -83,15 +79,15 @@ class User:
 		self.is_running = self.get_script_status()
 
 	def load_json(self, filename):
-		# print(f"[{getCurrentTime()}]OPEN FILE: {filename}")
+		# print(f"[{utils.getCurrentTime()}]OPEN FILE: {filename}")
 		try:
 			with open(f"message_templates/{filename}", "r", encoding="utf-8") as file:
 				return json.load(file)
 		except FileNotFoundError:
-			print(f"[{getCurrentTime()}] Error: File not found")
+			print(f"[{utils.getCurrentTime()}] Error: File not found")
 			return None
 		except json.JSONDecodeError:
-			print(f"[{getCurrentTime()}] Error: Invalid Json Format")
+			print(f"[{utils.getCurrentTime()}] Error: Invalid Json Format")
 			return None
 
 	# *
@@ -124,7 +120,7 @@ class User:
 				
 			return creds
 		except Exception as e:
-			print(f"[{getCurrentTime()}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] refresh-credentials -> ERROR: {e}")
 	
 	# *
 	def get_user_data(self):
@@ -135,11 +131,11 @@ class User:
 				result =  cursor.fetchall()
 
 				if len(result) > 1:
-					print(f"[{getCurrentTime()}][User {self.user_id}] ERROR!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}] ERROR!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
 				
 				return result[0] if result else None
 		except json.JSONDecodeError:
-			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
 	# *
@@ -151,7 +147,7 @@ class User:
 				result = cursor.fetchall()
 
 				if len(result) > 1:
-					print(f"[{getCurrentTime()}][User {self.user_id}] ERROR!!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}] ERROR!!!! - More than one user found with ID: {self.user_id}. Please check database for duplicates!")
 					return result[0] if result else None
 				
 				if len(result) == 0:
@@ -164,7 +160,7 @@ class User:
 				return result[0] if result else None
 		
 		except json.JSONDecodeError:
-			print(f"[{getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] Error decoding JSON data for user {self.user_id}")
 			return None
 
 	# *
@@ -173,7 +169,7 @@ class User:
 			cursor = conn.cursor()
 			cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, self.user_id))
 			conn.commit()
-		print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
+		print(f"[{utils.getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
 
 	# *
 	def update_message_limit_current_count(self):
@@ -186,7 +182,7 @@ class User:
 				conn.commit()
 				return True
 		except sqlite3.Error as e:
-			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
 			return False
 
 	# *
@@ -205,7 +201,7 @@ class User:
 				return True
 
 		except sqlite3.Error as e:
-			print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message limits: {e}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] Error updating message limits: {e}")
 			return False
 
 	# *
@@ -283,17 +279,17 @@ class User:
 		self.is_running = True
 		self.update_script_status("running")
 
-		print(f"[{getCurrentTime()}][User {self.user_id}] Started script")
+		print(f"[{utils.getCurrentTime()}][User {self.user_id}] Started script")
 
 	def stop_listener(self):
 		if not self.is_running:
-			print(f"[{getCurrentTime()}][User {self.user_id}] Script is already stopped")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] Script is already stopped")
 			return 
 		self.is_running = False
 		self.thread.join()
 		self.update_script_status("stopped")
 
-		print(f"[{getCurrentTime()}][User {self.user_id}] Script stopped")
+		print(f"[{utils.getCurrentTime()}][User {self.user_id}] Script stopped")
 
 	def messageLimit(self):
 		result = get_message_limit()
@@ -315,7 +311,7 @@ class User:
 		try:
 			creds = self.refresh_credentials(self.user_id)
 			if not creds:
-				print(f"[{getCurrentTime()}][User {self.user_id}] !!!!No creds found!!!!")
+				print(f"[{utils.getCurrentTime()}][User {self.user_id}] !!!!No creds found!!!!")
 				return None
 
 			client = gspread.authorize(creds)
@@ -327,22 +323,22 @@ class User:
 					name_column = self.sheet.get(sheet_range)
 
 					# * When the row is empty, length of nameCol is 1 and len of nameCol[0] is 0
-					print(f"[{getCurrentTime()}][User {self.user_id}] Waiting...")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}] Waiting...")
 					if(len(name_column) >=1 and len(name_column[0]) != 0):
 						print("nameCol : ", name_column) 
 						self.sender()
 					creds = self.refresh_credentials(self.user_id)
 				except Exception as e:
-					print(f"[{getCurrentTime()}][User {self.user_id}] !-! Error: {e}")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}] !-! Error: {e}")
 					sleep(30)
 				
 				sleep(10)
 		except Exception as e:
-			print(f"[{getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
+			print(f"[{utils.getCurrentTime()}][User {self.user_id}] !!! Failed to start: {e}")
 	
 	def sender(self):
 		if messageLimit() == False:
-			print(f"[{getCurrentTime()}] Message limit reached: {count} messages sent today.")
+			print(f"[{utils.getCurrentTime()}] Message limit reached: {count} messages sent today.")
 			self.stop_listener()
 			return None
 
@@ -367,9 +363,9 @@ class User:
 					conversation_id = 'none'
 
 					self.update_messages_table(str(message_id),str(conversation_id),'sent')
-					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}][{response.status_code}] Sent {name_col[i][0]} : 40{phoneNr_col[i][0]} template message named - {self.message_template['template']['name']}")
 				else:
-					print(f"[{getCurrentTime()}][User {self.user_id}][{response.status_code}] {response.text}")
+					print(f"[{utils.getCurrentTime()}][User {self.user_id}][{response.status_code}] {response.text}")
 
 				print(response.status_code)
 			new_last_line = self.last_row + len(name_col)
