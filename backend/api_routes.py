@@ -3,6 +3,8 @@ from googleapiclient.discovery import build
 import google.oauth2.credentials
 import json
 
+# TODO: With every route add in .js file /api prefix
+
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/submit_json', methods=['POST'])

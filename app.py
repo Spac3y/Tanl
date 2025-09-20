@@ -18,7 +18,7 @@ from email.mime.multipart import MIMEMultipart
 
 from back_end import User, createAccount # * My creation
 
-from frontend.routes.login import login_bp
+from backend import utils
 
 # *: Implement unit tests
 # * 1. Send messages
@@ -53,11 +53,6 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 	"openid"]
 
 _user_cache = {}
-
-# *
-def getCurrentTime():
-	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-	return now
 
 # *
 def get_user_id_DB(email:str) -> int:
@@ -121,7 +116,7 @@ def getEmail() -> str:
 		email = profile.get('emailAddresses', [])[0].get('value')
 		return email
 	except google.auth.exceptions.RefreshError as e:
-		print(f"[{getCurrentTime()}] Error refreshing credentials: {e}")
+		print(f"[{utils.getCurrentTime()}] Error refreshing credentials: {e}")
 		return redirect(url_for('login'))
 
 def getUserID():
@@ -352,14 +347,14 @@ def design():
 
 	user = retUser(user_id[1])
 	script_status = user.get_script_status()
-	# print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
+	# print(f"[{utils.getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{utils.getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 	return render_template("design/index.html", script_st = script_status), 200
 
 # *
 @app.route("/login")
 def login():
 	if 'credentials' in session:
-		print(f"[{getCurrentTime()}]--- Logging user out ---")
+		print(f"[{utils.getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return render_template("login/index.html")
 
@@ -367,7 +362,7 @@ def login():
 @app.route("/logout")
 def logout():
 	if 'credentials' in session:
-		print(f"[{getCurrentTime()}]--- Logging user out ---")
+		print(f"[{utils.getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return redirect(url_for('design'))
 
@@ -478,11 +473,11 @@ def start_stop():
 		return jsonify({"message" : "Stopped script"}), 200
 	
 	elif received_data == '1':
-		print(f"[{getCurrentTime()}][User {getUserID()[1]}] Starting script")
+		print(f"[{utils.getCurrentTime()}][User {getUserID()[1]}] Starting script")
 		retUser(getUserID()[1]).launch_listener()
 		return jsonify({"message" : "Started script"}), 200
 	
-	print(f"[{getCurrentTime()}][User {getUserID()[1]}] Error invalid value provided")
+	print(f"[{utils.getCurrentTime()}][User {getUserID()[1]}] Error invalid value provided")
 	return jsonify({"error" : "Invalid value provided"}), 400
 
 @app.route("/user_info")
@@ -497,7 +492,7 @@ def read_sheet():
 
 	user = retUser(user_id[1])
 	script_status = user.get_script_status()
-	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{utils.getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{utils.getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st = script_status)
 
@@ -624,8 +619,6 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_error(error):
 	return render_template('500/index.html', error_message=str(error)), 500
-
-app.register_blueprint(login_bp)
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)  # Enables HTTPS for local testing
