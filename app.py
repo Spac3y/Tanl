@@ -1,23 +1,22 @@
-from flask import Flask, redirect, request, session, url_for, render_template, jsonify
+import json
+import os
+import smtplib
+import sqlite3
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import google.oauth2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
+from flask import (Flask, jsonify, redirect, render_template, request, session,
+                   url_for)
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-import json
-import sqlite3
-import os
 
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-
-# for interactive message
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-from back_end import User, createAccount # * My creation
-
+from back_end import User, createAccount 
 from backend import utils
 
 # *: Implement unit tests
@@ -29,12 +28,12 @@ from backend import utils
 # ! When accesing through ngrok i get uri missmatch error FIX!!!!
 # * this error is caused because i have a dynamic url. Need to get domain for static webhook url
 
-# Whatsapp webhook verification token
-VERIFY_TOKEN = "my_super_secret_token"
+VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN")
+CLIENT_SECRETS_FILE = "client_secret.json"
 
-SENDER_EMAIL = ""
-RECEIVER_EMAIL = ""
-APP_PASSWORD = ""
+SENDER_EMAIL = os.getenv("SMTP_SENDER_EMAIL")
+APP_PASSWORD = os.getenv("SMTP_APP_PASSWORD")
+RECEIVER_EMAIL = "email@email.com"
 
 subject = "Client nou interesat de produs!!"
 email_message = MIMEMultipart()
@@ -43,11 +42,9 @@ email_message['To'] = RECEIVER_EMAIL
 email_message['Subject'] = subject
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-with open('secret_key.txt', 'r') as f:
-	app.secret_key = f.read()
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/drive.file",
 	"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", 
 	"openid"]
