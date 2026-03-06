@@ -13,3 +13,4 @@ message_templates/*
 temp/
 init/insert_test_data.py
 .ENV
+archive/

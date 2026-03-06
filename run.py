@@ -1,0 +1,10 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from frontend import app
+
+if __name__ == "__main__":
+	app.run(host="0.0.0.0", port=5000,ssl_context=("ssl/cert.pem", "ssl/key.pem"),
+	 debug=True, use_reloader=True)
