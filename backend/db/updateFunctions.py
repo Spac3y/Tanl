@@ -1,5 +1,7 @@
 import json
 import sqlite3
+from datetime import datetime, timedelta
+from ..utils import getCurrentTime
 
 # All update functions 
 # TODO: updaters - Implement test functions for each of these functions 
@@ -22,27 +24,27 @@ def save_credentials_to_db(self, user_id : int, credentials : dict):
 		""", (credentials.to_json(), user_id))
 		conn.commit()
 
-def reset_message_limit(self, date_now: str):
+def reset_message_limit(user_id, date_now: str):
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
-		cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, self.user_id))
+		cursor.execute("UPDATE message_limit SET current_value = 0, last_day = ? WHERE user_id = ?", (date_now, user_id))
 		conn.commit()
-	print(f"[{getCurrentTime()}][User {self.user_id}] Message limit reset for date: {date_now}")
+	print(f"[{getCurrentTime()}][User {user_id}] Message limit reset for date: {date_now}")
 
-def update_message_limit_current_count(self):
+def update_message_limit_current_count(user_id) -> bool:
 	try:
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
 			cursor.execute("""
 			UPDATE message_limit SET current_count = current_count + 1 WHERE user_id = ?;
-			""", (self.user_id,))
+			""", (user_id,))
 			conn.commit()
 			return True
 	except sqlite3.Error as e:
 		print(f"[{getCurrentTime()}][User {self.user_id}] Error updating message count: {e}")
-		return False
+	return False
 
-def update_message_limit(self, is_on: bool, value: int):
+def update_message_limit(self, is_on: bool, value: int) -> bool:
 	try:
 		with sqlite3.connect("database.db") as conn:
 			cursor = conn.cursor()
@@ -55,6 +57,9 @@ def update_message_limit(self, is_on: bool, value: int):
 			""", (self.user_id, is_on, value))
 			conn.commit()
 			return True
+	except Exception as e:
+		print("ERROR : update_message_limit function -> ", e)
+	return False
 
 def update_messages_table(self, message_id, conversation_id, event_type):
 	with sqlite3.connect("database.db") as conn:
@@ -64,7 +69,7 @@ def update_messages_table(self, message_id, conversation_id, event_type):
 		""", (self.user_id, message_id, event_type))
 		conn.commit()
 
-			def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead: int, template_name: str, name_col: str, phone_col: str) -> bool:
+def update_account_details(self, email: str, wNumber: str, wToken: str, gSheetID: str, price_lead: int, template_name: str, name_col: str, phone_col: str) -> bool:
 	name_col = name_col.upper()
 	phone_col = phone_col.upper()
 

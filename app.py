@@ -176,7 +176,7 @@ def updateMessageEvent(new_type:str, message_id: str, conversation_id:str, is_re
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()
 		if is_response and message_id == 'none': 
-			cursor.execute("UPDATE message_events SET event_type='responded' WHERE user_id = ?, message_id = ? ", (user_id, conversation_id))
+			cursor.execute("UPDATE message_events SET event_type='responded' WHERE user_id = ? AND message_id = ? ", (user_id, conversation_id))
 			conn.commit()
 			return True
 
@@ -504,7 +504,7 @@ def profile():
 @app.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
-		return 401
+		return jsonify({"response" : "Credentials not found in session"}), 401
 	else:
 		if request.method == 'GET':
 			user_data = retUser(getUserID()[1]).get_user_data()
@@ -588,6 +588,7 @@ def webhook():
 	elif request.method == 'POST':
 		data = request.json
 		conversation_id =  data['entry'][0]['id']
+		status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
 		is_response = False
 
 		if 'contacts' in data['entry'][0]['changes'][0] and 'messages' in data['entry'][0]['changes'][0]:
@@ -598,14 +599,13 @@ def webhook():
 			# client_name = data['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']
 			# client_phone = data['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id']
 		else:
-			status = data['entry'][0]['changes'][0]['value']['statuses'][0]['status']
 			message_id = data['entry'][0]['changes'][0]['value']['statuses'][0]['id']
 		
-		if(updateMessageEvent(status, message_id, conversation_id, is_response,  getUserID[1]) == True):
+		if(updateMessageEvent(status, message_id, conversation_id, is_response,  getUserID()[1]) == True):
 			return jsonify({"status" : "success"}), 200
 		return jsonify({"error" : "Internal server error"}), 500
 
-		handlePreconfReponse()
+		handlePreconfResponse()
 
 # *
 @app.errorhandler(404)
