@@ -3,35 +3,6 @@ from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 
-def getMonthlyValues(user_id: int):
-	with sqlite3.connect("database.db") as conn:
-		cursor = conn.cursor()
-		cursor.execute('''
-		WITH months(month_number, month_name) AS (
-		VALUES
-			('01', 'January'), ('02', 'February'), ('03', 'March'),
-			('04', 'April'),   ('05', 'May'),      ('06', 'June'),
-			('07', 'July'),    ('08', 'August'),   ('09', 'September'),
-			('10', 'October'), ('11', 'November'), ('12', 'December')
-		)
-		SELECT 
-		COALESCE(count_table.count, 0) AS count
-		FROM months
-		LEFT JOIN (
-		SELECT 
-			strftime('%m', timestamp) AS month_number,
-			COUNT(*) AS count
-		FROM message_events
-		WHERE user_id = ?
-		GROUP BY month_number
-		) AS count_table
-		ON months.month_number = count_table.month_number
-		ORDER BY months.month_number;
-		''', (user_id,))
-
-		rows = cursor.fetchall()
-		return [count for (count,) in rows]
-
 def calculate_date_range(subtraction_value: str):
 	now = datetime.now()
 
@@ -49,7 +20,6 @@ def calculate_date_range(subtraction_value: str):
 
 	result = cases.get(subtraction_value)
 	return result.strftime("%Y-%m-%d %H:%M:%S") if result else "Invalid subtraction value"
-
 
 #* Functions for first chart
 def getCustomValues(interval, user_id: int):
@@ -100,3 +70,33 @@ def getCustomValues(interval, user_id: int):
 			results.append({'label': label, 'value': count})
 
 	return results
+
+# * Function for second chart
+def getMonthlyValues(user_id: int):
+	with sqlite3.connect("database.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute('''
+		WITH months(month_number, month_name) AS (
+		VALUES
+			('01', 'January'), ('02', 'February'), ('03', 'March'),
+			('04', 'April'),   ('05', 'May'),      ('06', 'June'),
+			('07', 'July'),    ('08', 'August'),   ('09', 'September'),
+			('10', 'October'), ('11', 'November'), ('12', 'December')
+		)
+		SELECT 
+		COALESCE(count_table.count, 0) AS count
+		FROM months
+		LEFT JOIN (
+		SELECT 
+			strftime('%m', timestamp) AS month_number,
+			COUNT(*) AS count
+		FROM message_events
+		WHERE user_id = ? AND strftime('%Y', timestamp) = strftime('%Y', 'now')  -- current year only
+		GROUP BY month_number
+		) AS count_table
+		ON months.month_number = count_table.month_number
+		ORDER BY months.month_number;
+		''', (user_id,))
+
+		rows = cursor.fetchall()
+		return [count for (count,) in rows]

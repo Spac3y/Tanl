@@ -4,8 +4,7 @@ import google_auth_oauthlib.flow
 from flask import Blueprint, redirect, render_template, request, session, url_for
 from googleapiclient.discovery import build
 
-from backend import utils
-from utils import get_user_id_DB, save_credentials_to_db
+from utils import get_user_id_DB, save_credentials_to_db, getCurrentTime
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -23,14 +22,14 @@ SCOPES = [
 @auth_bp.route("/login")
 def login():
 	if 'credentials' in session:
-		print(f"[{utils.getCurrentTime()}]--- Logging user out ---")
+		print(f"[{getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return render_template("login/index.html")
 
 @auth_bp.route("/logout")
 def logout():
 	if 'credentials' in session:
-		print(f"[{utils.getCurrentTime()}]--- Logging user out ---")
+		print(f"[{getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return redirect(url_for('dashboard.design'))
 

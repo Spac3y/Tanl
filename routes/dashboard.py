@@ -1,9 +1,6 @@
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 
-from backend import createAccount
-from backend import utils
-from utils.db import checkAccountByEmail, get_user_id_DB
-from utils.user_helpers import getEmail, getUserID, retUser
+from utils import getCurrentTime, getEmail, getUserID, retUser, checkAccountByEmail, get_user_id_DB, createAccount
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -35,7 +32,7 @@ def read_sheet():
 
 	user = retUser(user_id[1], dashboard_bp.user_cache)
 	script_status = user.get_script_status()
-	print(f"[{utils.getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{utils.getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
+	print(f"[{getCurrentTime()}][User {user_id[1]}] Script is running") if script_status else print(f"[{getCurrentTime()}][User {getUserID()[1]}] Script is stopped")
 
 	return render_template("dashboard/index.html", script_st=script_status)
 
@@ -52,7 +49,7 @@ def profile():
 @dashboard_bp.route("/profile-updates", methods=['GET', 'POST'])
 def profile_updates():
 	if 'credentials' not in session:
-		return 401  # BUG: should be jsonify(...), 401 — kept as-is per request
+		return jsonify({"result" : "credentials not in session"}), 401 
 	else:
 		if request.method == 'GET':
 			user_data = retUser(getUserID()[1], dashboard_bp.user_cache).get_user_data()

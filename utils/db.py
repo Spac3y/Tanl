@@ -3,7 +3,6 @@ import json
 import sqlite3
 from datetime import datetime, timedelta
 
-
 def get_user_id_DB(email: str) -> int:
 	with sqlite3.connect("database.db") as conn:
 		cursor = conn.cursor()

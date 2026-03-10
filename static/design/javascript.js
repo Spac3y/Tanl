@@ -23,7 +23,9 @@ window.onload = function () {
 	})
 		.then(response => response.json())
 		.then(data => {
-			// console.log("Response from Flask:", data.result)
+			// !!!!
+			console.log("Response from Flask:", data.status)
+			console.log(1)
 			document.getElementById("text_status").textContent = data.status
 			if (data.status == "Running") document.getElementById("text_status").style.color = "green"
 			else document.getElementById("text_status").style.color = "red"
@@ -35,7 +37,6 @@ function selectTime(btn, interval) {
 	document.querySelectorAll('.opt-timp').forEach(b => b.classList.remove('active'));
 	btn.classList.add('active');
 	getTimeInterval(interval);
-	// console.log('Interval selectat:', interval);
 }
 
 function getTimeInterval(selectedInterval) {
@@ -73,7 +74,6 @@ function getTimeInterval(selectedInterval) {
 
 					chart.data.datasets[0].data[i] = value;
 					chart.data.labels[i] = label;
-					
 				}
 				chart.update();
 

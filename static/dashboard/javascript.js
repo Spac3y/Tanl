@@ -1,4 +1,3 @@
-
 start_button = document.getElementById('start')
 stop_button = document.getElementById('stop')
 
@@ -75,7 +74,7 @@ function getTimeInterval() {
 	.then(response => response.json())
 	.then(data => {
 		var quant = document.getElementById("value_input").value;
-
+		console.log(data)
 		if (quant === "") {
 			alert("Introdu Valoarea aproximativa a unui lead");
 		} else {

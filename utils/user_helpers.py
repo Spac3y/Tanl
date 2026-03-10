@@ -5,9 +5,7 @@ import google.oauth2.credentials
 from flask import redirect, session, url_for
 from googleapiclient.discovery import build
 
-from backend import utils
-from utils import get_user_id_DB
-
+from utils import get_user_id_DB, getCurrentTime
 
 def getEmail() -> str:
 	if 'credentials' not in session:
@@ -22,7 +20,7 @@ def getEmail() -> str:
 		email = profile.get('emailAddresses', [])[0].get('value')
 		return email
 	except google.auth.exceptions.RefreshError as e:
-		print(f"[{utils.getCurrentTime()}] Error refreshing credentials: {e}")
+		print(f"[{getCurrentTime()}] Error refreshing credentials: {e}")
 		return redirect(url_for('login'))
 
 
