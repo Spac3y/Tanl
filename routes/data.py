@@ -1,14 +1,9 @@
 from flask import Blueprint, jsonify, request, session
 
-from backend import utils
-from utils.charts import calculate_date_range, getCustomValues, getMonthlyValues
-from utils.db import get_len_message_sorted
-from utils.user_helpers import getUserID, retUser
+from utils import calculate_date_range, getCustomValues, getMonthlyValues, get_len_message_sorted, getUserID, retUser, getCurrentTime
 
 data_bp = Blueprint('data', __name__)
 
-
-# *
 @data_bp.route('/submit_json', methods=['POST'])
 def submit_json():
 	data = request.get_json()
@@ -39,8 +34,6 @@ def submit_json():
 		"result": "succes"
 	})
 
-
-# *
 @data_bp.route('/status', methods=['POST'])
 def status():
 	user_id = getUserID()[1]
@@ -63,8 +56,6 @@ def status():
 
 	return jsonify({'status': value})
 
-
-# *
 @data_bp.route('/start-stop', methods=['POST'])
 def start_stop():
 	data = request.get_json()
@@ -79,9 +70,9 @@ def start_stop():
 		return jsonify({"message": "Stopped script"}), 200
 
 	elif received_data == '1':
-		print(f"[{utils.getCurrentTime()}][User {user_id}] Starting script")
+		print(f"[{getCurrentTime()}][User {user_id}] Starting script")
 		retUser(user_id, data_bp.user_cache).launch_listener()
 		return jsonify({"message": "Started script"}), 200
 
-	print(f"[{utils.getCurrentTime()}][User {user_id}] Error invalid value provided")
+	print(f"[{getCurrentTime()}][User {user_id}] Error invalid value provided")
 	return jsonify({"error": "Invalid value provided"}), 400

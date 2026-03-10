@@ -5,7 +5,7 @@ from flask import Blueprint, redirect, render_template, request, session, url_fo
 from googleapiclient.discovery import build
 
 from backend import utils
-from utils.db import get_user_id_DB, save_credentials_to_db
+from utils import get_user_id_DB, save_credentials_to_db
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,8 +20,6 @@ SCOPES = [
 	"openid"
 ]
 
-
-# *
 @auth_bp.route("/login")
 def login():
 	if 'credentials' in session:
@@ -29,15 +27,12 @@ def login():
 	session.clear()
 	return render_template("login/index.html")
 
-
-# *
 @auth_bp.route("/logout")
 def logout():
 	if 'credentials' in session:
 		print(f"[{utils.getCurrentTime()}]--- Logging user out ---")
 	session.clear()
 	return redirect(url_for('dashboard.design'))
-
 
 @auth_bp.route("/google_login")
 def google_login():
@@ -49,7 +44,6 @@ def google_login():
 	authorization_url, state = flow.authorization_url(access_type='offline', prompt='consent', include_granted_scopes='true')
 	session["state"] = state
 	return redirect(authorization_url)
-
 
 @auth_bp.route("/callback")
 def callback():

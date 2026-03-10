@@ -13,7 +13,6 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 # * In-memory user cache shared across blueprints
 _user_cache = {}
 
-# * Register blueprints
 from routes.auth import auth_bp
 from routes.dashboard import dashboard_bp
 from routes.data import data_bp

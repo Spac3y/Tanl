@@ -6,7 +6,7 @@ from flask import redirect, session, url_for
 from googleapiclient.discovery import build
 
 from backend import utils
-from utils.db import get_user_id_DB
+from utils import get_user_id_DB
 
 
 def getEmail() -> str:
@@ -37,7 +37,7 @@ def getUserID():
 
 
 def retUser(user_id: int, _user_cache: dict):
-	from back_end import User
+	from backend import User
 	if user_id not in _user_cache:
 		_user_cache[user_id] = User(user_id)
 	return _user_cache[user_id]

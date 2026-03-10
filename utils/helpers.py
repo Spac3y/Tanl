@@ -1,10 +1,8 @@
 from datetime import datetime
 
-
 def getCurrentTime() -> str:
 	now = datetime.now().strftime("%y-%m-%d %H:%M:%S")
 	return now
-
 
 def transformPhoneNumber(phoneNr) -> str:
 	phoneNr = str(phoneNr)

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 
-from back_end import createAccount
+from backend import createAccount
 from backend import utils
 from utils.db import checkAccountByEmail, get_user_id_DB
 from utils.user_helpers import getEmail, getUserID, retUser

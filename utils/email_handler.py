@@ -41,7 +41,7 @@ def handlePreconfResponse(data):
 				server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, email_message.as_string())
 				print("✅ Email sent successfully!")
 		except Exception as e:
-			print("❌ Error:", e)
+			print("Error:", e)
 
 		return "Button processed", 200
 
