@@ -37,4 +37,4 @@ def internal_error(error):
 
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000, ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)
+	app.run(host="127.0.0.1", port=5100, ssl_context=("ssl/cert.pem", "ssl/key.pem"), debug=True, use_reloader=True)
